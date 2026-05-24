@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    NOTE: This is an App Widget RemoteViews layout.
+    Allowed top-level / nested views in RemoteViews are limited to:
+    FrameLayout, LinearLayout, RelativeLayout, GridLayout, TextView, Button,
+    ImageView, ImageButton, ProgressBar, ListView, GridView, StackView,
+    AdapterViewFlipper, ViewFlipper, AnalogClock, Chronometer, ViewStub.
+    ScrollView is NOT allowed and will throw at runtime.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -20,7 +28,9 @@
             android:layout_weight="1"
             android:textColor="@color/saffron"
             android:textStyle="bold"
-            android:textSize="14sp" />
+            android:textSize="13sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
 
         <ImageButton
             android:id="@+id/widget_refresh_btn"
@@ -32,45 +42,38 @@
             android:scaleType="fitCenter" />
     </LinearLayout>
 
-    <ScrollView
+    <TextView
+        android:id="@+id/widget_sanskrit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textColor="@color/text_primary"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:maxLines="4"
+        android:ellipsize="end"
+        android:lineSpacingExtra="1dp" />
+
+    <TextView
+        android:id="@+id/widget_english"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="11sp"
+        android:textStyle="italic"
+        android:maxLines="3"
+        android:ellipsize="end" />
+
+    <TextView
+        android:id="@+id/widget_hindi"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:fillViewport="true">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/widget_sanskrit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:textColor="@color/text_primary"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:lineSpacingExtra="2dp" />
-
-            <TextView
-                android:id="@+id/widget_english"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textColor="@color/text_secondary"
-                android:textSize="11sp"
-                android:textStyle="italic" />
-
-            <TextView
-                android:id="@+id/widget_hindi"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:textColor="@color/text_primary"
-                android:textSize="11sp" />
-        </LinearLayout>
-    </ScrollView>
+        android:layout_marginTop="6dp"
+        android:textColor="@color/text_primary"
+        android:textSize="11sp"
+        android:ellipsize="end" />
 
     <Button
         android:id="@+id/widget_translate_btn"
@@ -80,6 +83,7 @@
         android:text="@string/translate_button"
         android:textColor="@android:color/white"
         android:textSize="12sp"
+        android:textAllCaps="false"
         android:background="@drawable/btn_saffron"
         android:minHeight="36dp"
         android:padding="4dp" />
