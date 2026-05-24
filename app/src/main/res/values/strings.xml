@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Gita Daily</string>
+    <string name="widget_description">Daily verse from the Bhagavad Gita with Sanskrit, English, and Hindi.</string>
+    <string name="verse_header">Bhagavad Gita • Chapter %1$d, Verse %2$d</string>
+    <string name="translate_button">Translate</string>
+    <string name="translate_title">Translate Verse</string>
+    <string name="label_english">English</string>
+    <string name="label_hindi">हिन्दी (Hindi)</string>
+    <string name="label_translate_to">Translate meaning to:</string>
+    <string name="translating">Translating…</string>
+    <string name="translate_failed">Translation failed. Please try again.</string>
+    <string name="translate_model_failed">Could not download language model. Check your internet connection.</string>
+    <string name="translate_note">Translations after the first download work offline. Other languages translate the English meaning via Google ML Kit on-device translation.</string>
+    <string name="refresh">Refresh verse</string>
+</resources>
