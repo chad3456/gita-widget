@@ -449,6 +449,129 @@
   }
 
   /* -----------------------------------------------------
+     11. GLASS-MORPHISM HERO TITLE
+  ----------------------------------------------------- */
+  function initGlass() {
+    const wrap = document.getElementById("heroTitleWrap");
+    if (!wrap) return;
+    const glass = wrap.querySelector(".hero__glass");
+
+    const enter = () => wrap.classList.add("is-glass");
+    const leave = () => wrap.classList.remove("is-glass");
+
+    // pointer-tracked sheen (skip on touch where there is no hover)
+    if (!isMobile) {
+      wrap.addEventListener("mouseenter", enter);
+      wrap.addEventListener("mouseleave", leave);
+      wrap.addEventListener("mousemove", (e) => {
+        const r = wrap.getBoundingClientRect();
+        const gx = ((e.clientX - r.left) / r.width) * 100;
+        const gy = ((e.clientY - r.top) / r.height) * 100;
+        glass.style.setProperty("--gx", gx + "%");
+        glass.style.setProperty("--gy", gy + "%");
+      });
+    } else {
+      // tap to toggle the frosted panel on touch devices
+      wrap.addEventListener("click", () => wrap.classList.toggle("is-glass"));
+    }
+  }
+
+  /* -----------------------------------------------------
+     12. SVG DRONE PROJECTION (immersive)
+  ----------------------------------------------------- */
+  function scramble(el, finalText, duration) {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789·/";
+    const len = finalText.length;
+    const start = performance.now();
+    function tick(now) {
+      const p = Math.min(1, (now - start) / duration);
+      const settled = Math.floor(p * len);
+      let out = finalText.slice(0, settled);
+      for (let i = settled; i < len; i++) {
+        out += finalText[i] === " " ? " " : chars[(Math.random() * chars.length) | 0];
+      }
+      el.textContent = out;
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = finalText;
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function initDrone() {
+    const svg = document.getElementById("droneSvg");
+    if (!svg || !hasGSAP) return;
+
+    const readouts = document.querySelectorAll("#projReadout b[data-rd]");
+
+    // reduced motion: show everything statically + fill readouts
+    if (prefersReduced) {
+      svg.querySelectorAll(".draw").forEach((p) => (p.style.strokeDashoffset = "0"));
+      readouts.forEach((b) => (b.textContent = b.dataset.rd));
+      return;
+    }
+
+    // continuous rotor spin (alternating direction per diagonal)
+    svg.querySelectorAll(".drone__rotor").forEach((rotor, i) => {
+      const blades = rotor.querySelector(".rotor-blades");
+      const cx = rotor.dataset.cx, cy = rotor.dataset.cy;
+      gsap.to(blades, {
+        rotation: i % 2 ? -360 : 360,
+        svgOrigin: `${cx} ${cy}`,
+        repeat: -1,
+        ease: "none",
+        duration: 0.28 + i * 0.015,
+      });
+    });
+
+    // rotating radar sweep + pulsing rings
+    gsap.to("#radarSweep", { rotation: 360, svgOrigin: "300 300", repeat: -1, ease: "none", duration: 5 });
+    gsap.to(".drone__rings .ring", {
+      scale: 1.08, svgOrigin: "300 300", opacity: 0.45,
+      repeat: -1, yoyo: true, ease: "sine.inOut", duration: 2.2, stagger: 0.35,
+    });
+    // gentle hover/float of the whole airframe
+    gsap.to(svg, { y: -16, repeat: -1, yoyo: true, ease: "sine.inOut", duration: 3.2 });
+    // travelling scan line
+    const stage = document.getElementById("projStage");
+    if (stage) {
+      const sl = stage.querySelector(".proj__scanline");
+      gsap.fromTo(sl, { top: "4%" }, { top: "96%", repeat: -1, yoyo: true, ease: "sine.inOut", duration: 3.6 });
+    }
+
+    // build-on reveal driven by scroll
+    if (window.ScrollTrigger) {
+      const tl = gsap.timeline({
+        scrollTrigger: { trigger: "#projStage", start: "top 78%", once: true },
+      });
+      tl.to(".drone .draw", {
+        strokeDashoffset: 0, duration: 1.1, ease: "power2.inOut", stagger: 0.13,
+      })
+        .from(".drone__gimbal", { scale: 0, svgOrigin: "300 300", duration: 0.5, ease: "back.out(2)" }, "-=0.4")
+        .from(".rotor-disc", { scale: 0, duration: 0.5, ease: "back.out(1.6)", stagger: 0.08 }, "<")
+        .to([".drone__dims", ".drone__labels"], { opacity: 1, duration: 0.6 }, "-=0.2")
+        .add(() => readouts.forEach((b, i) =>
+          setTimeout(() => scramble(b, b.dataset.rd, 700), i * 120)), "-=0.3");
+    }
+
+    // cursor-tracking targeting reticle
+    if (!isMobile && stage) {
+      const reticle = document.getElementById("reticle");
+      const xTo = gsap.quickTo(reticle, "x", { duration: 0.5, ease: "power3" });
+      const yTo = gsap.quickTo(reticle, "y", { duration: 0.5, ease: "power3" });
+      stage.addEventListener("mouseenter", () =>
+        gsap.to(reticle, { opacity: 1, duration: 0.3 }));
+      stage.addEventListener("mouseleave", () =>
+        gsap.to(reticle, { opacity: 0, duration: 0.3 }));
+      stage.addEventListener("mousemove", (e) => {
+        const r = stage.getBoundingClientRect();
+        // map pointer into the 600x600 viewBox
+        xTo(((e.clientX - r.left) / r.width) * 600);
+        yTo(((e.clientY - r.top) / r.height) * 600);
+      });
+    }
+  }
+
+  /* -----------------------------------------------------
      BOOT
   ----------------------------------------------------- */
   window.addEventListener("DOMContentLoaded", () => {
@@ -457,12 +580,14 @@
     initNav();
     initCursor();
     initMarquee();
+    initGlass();
 
     runPreloader(() => {
       animateHero();
       initReveals();
       initHorizontal();
       initStats();
+      initDrone();
       if (window.ScrollTrigger) ScrollTrigger.refresh();
     });
   });

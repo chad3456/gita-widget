@@ -41,6 +41,7 @@
     <nav class="nav__links" id="navLinks">
       <a href="#mission" data-cursor="hover">Mission</a>
       <a href="#systems" data-cursor="hover">Systems</a>
+      <a href="#projection" data-cursor="hover">Projection</a>
       <a href="#capabilities" data-cursor="hover">Capabilities</a>
       <a href="#contact" data-cursor="hover">Contact</a>
     </nav>
@@ -54,6 +55,7 @@
   <div class="mobile-menu" id="mobileMenu">
     <a href="#mission">Mission</a>
     <a href="#systems">Systems</a>
+    <a href="#projection">Projection</a>
     <a href="#capabilities">Capabilities</a>
     <a href="#contact">Contact</a>
     <div class="mobile-menu__foot">VANTA DYNAMICS — EST. 2031</div>
@@ -68,11 +70,14 @@
         <div class="hero__eyebrow" data-fade>
           <span class="hero__dot"></span> AUTONOMOUS DEFENCE · CLASSIFIED EDGE&nbsp;AI
         </div>
-        <h1 class="hero__title">
-          <span class="line"><span class="word">Deterrence,</span></span>
-          <span class="line"><span class="word">re-engineered</span></span>
-          <span class="line"><span class="word">for</span> <span class="word hero__title-em">2031.</span></span>
-        </h1>
+        <div class="hero__title-wrap" id="heroTitleWrap" data-cursor="hover">
+          <span class="hero__glass" aria-hidden="true"></span>
+          <h1 class="hero__title">
+            <span class="line"><span class="word">Deterrence,</span></span>
+            <span class="line"><span class="word">re-engineered</span></span>
+            <span class="line"><span class="word">for</span> <span class="word hero__title-em">2031.</span></span>
+          </h1>
+        </div>
         <p class="hero__sub" data-fade>
           VANTA builds self-directed aerial platforms, distributed sensor fusion
           and on-device intelligence that decides faster than the threat.
@@ -189,12 +194,147 @@
       </div>
     </section>
 
+    <!-- PROJECTION (immersive SVG drone) -->
+    <section class="proj" id="projection">
+      <div class="proj__grid-overlay" aria-hidden="true"></div>
+      <div class="proj__head">
+        <div class="section-head">
+          <span class="section-head__idx">03</span>
+          <span class="section-head__label">LIVE PROJECTION</span>
+        </div>
+        <h2 class="proj__title">WRAITH&nbsp;V<br/><span>schematic.</span></h2>
+        <p class="proj__lead">A holographic walk-around of the airframe — rendered live, the way an operator sees it inside the command tent.</p>
+        <ul class="proj__readout" id="projReadout">
+          <li><span>STATUS</span><b data-rd="ARMED · LOITER">—</b></li>
+          <li><span>ALTITUDE</span><b data-rd="10,840 m">—</b></li>
+          <li><span>AIRSPEED</span><b data-rd="142 kt">—</b></li>
+          <li><span>LINK</span><b data-rd="MESH · 9 ms">—</b></li>
+          <li><span>PAYLOAD</span><b data-rd="EO / IR · NOMINAL">—</b></li>
+        </ul>
+      </div>
+
+      <div class="proj__stage" id="projStage">
+        <!-- HUD corner brackets -->
+        <span class="hud-bracket hud-bracket--tl"></span>
+        <span class="hud-bracket hud-bracket--tr"></span>
+        <span class="hud-bracket hud-bracket--bl"></span>
+        <span class="hud-bracket hud-bracket--br"></span>
+        <span class="proj__scanline" aria-hidden="true"></span>
+
+        <svg id="droneSvg" class="drone" viewBox="0 0 600 600" role="img"
+             aria-label="Animated blueprint projection of the Wraith V quadcopter">
+          <defs>
+            <radialGradient id="rotorGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#c8ff00" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#c8ff00" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="armGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#2de2ff"/>
+              <stop offset="100%" stop-color="#c8ff00"/>
+            </linearGradient>
+          </defs>
+
+          <!-- scanning / radar rings -->
+          <g class="drone__rings" stroke="#2de2ff" fill="none" opacity="0.25">
+            <circle class="ring" cx="300" cy="300" r="120"/>
+            <circle class="ring" cx="300" cy="300" r="190"/>
+            <circle class="ring" cx="300" cy="300" r="260"/>
+          </g>
+          <!-- rotating radar sweep -->
+          <g id="radarSweep" class="drone__sweep">
+            <path d="M300 300 L300 40 A260 260 0 0 1 480 120 Z" fill="url(#rotorGlow)" opacity="0.35"/>
+          </g>
+
+          <!-- airframe arms (drawn on) -->
+          <g class="drone__frame" stroke="url(#armGrad)" stroke-width="6"
+             fill="none" stroke-linecap="round">
+            <path class="draw" pathLength="1" d="M300 300 L150 150"/>
+            <path class="draw" pathLength="1" d="M300 300 L450 150"/>
+            <path class="draw" pathLength="1" d="M300 300 L150 450"/>
+            <path class="draw" pathLength="1" d="M300 300 L450 450"/>
+          </g>
+
+          <!-- central fuselage -->
+          <g class="drone__body">
+            <rect class="draw" pathLength="1" x="252" y="252" width="96" height="96" rx="20"
+                  stroke="#f4f6fb" stroke-width="4" fill="#0d1018"/>
+            <circle class="drone__gimbal" cx="300" cy="300" r="26"
+                    stroke="#c8ff00" stroke-width="3" fill="none"/>
+            <circle cx="300" cy="300" r="7" fill="#c8ff00"/>
+          </g>
+
+          <!-- rotor hubs + spinning blades -->
+          <g class="drone__rotor" data-cx="150" data-cy="150">
+            <circle class="rotor-disc" cx="150" cy="150" r="60" fill="url(#rotorGlow)"/>
+            <circle cx="150" cy="150" r="60" stroke="#2de2ff" stroke-width="2" fill="none" opacity="0.5"/>
+            <g class="rotor-blades">
+              <rect x="146" y="98" width="8" height="104" rx="4" fill="#f4f6fb"/>
+              <rect x="98" y="146" width="104" height="8" rx="4" fill="#f4f6fb"/>
+            </g>
+            <circle cx="150" cy="150" r="10" fill="#05060a" stroke="#c8ff00" stroke-width="2"/>
+          </g>
+          <g class="drone__rotor" data-cx="450" data-cy="150">
+            <circle class="rotor-disc" cx="450" cy="150" r="60" fill="url(#rotorGlow)"/>
+            <circle cx="450" cy="150" r="60" stroke="#2de2ff" stroke-width="2" fill="none" opacity="0.5"/>
+            <g class="rotor-blades">
+              <rect x="446" y="98" width="8" height="104" rx="4" fill="#f4f6fb"/>
+              <rect x="398" y="146" width="104" height="8" rx="4" fill="#f4f6fb"/>
+            </g>
+            <circle cx="450" cy="150" r="10" fill="#05060a" stroke="#c8ff00" stroke-width="2"/>
+          </g>
+          <g class="drone__rotor" data-cx="150" data-cy="450">
+            <circle class="rotor-disc" cx="150" cy="450" r="60" fill="url(#rotorGlow)"/>
+            <circle cx="150" cy="450" r="60" stroke="#2de2ff" stroke-width="2" fill="none" opacity="0.5"/>
+            <g class="rotor-blades">
+              <rect x="146" y="398" width="8" height="104" rx="4" fill="#f4f6fb"/>
+              <rect x="98" y="446" width="104" height="8" rx="4" fill="#f4f6fb"/>
+            </g>
+            <circle cx="150" cy="450" r="10" fill="#05060a" stroke="#c8ff00" stroke-width="2"/>
+          </g>
+          <g class="drone__rotor" data-cx="450" data-cy="450">
+            <circle class="rotor-disc" cx="450" cy="450" r="60" fill="url(#rotorGlow)"/>
+            <circle cx="450" cy="450" r="60" stroke="#2de2ff" stroke-width="2" fill="none" opacity="0.5"/>
+            <g class="rotor-blades">
+              <rect x="446" y="398" width="8" height="104" rx="4" fill="#f4f6fb"/>
+              <rect x="398" y="446" width="104" height="8" rx="4" fill="#f4f6fb"/>
+            </g>
+            <circle cx="450" cy="450" r="10" fill="#05060a" stroke="#c8ff00" stroke-width="2"/>
+          </g>
+
+          <!-- dimension / telemetry callouts -->
+          <g class="drone__dims" stroke="#4a4f5e" stroke-width="1.5"
+             fill="none" opacity="0">
+            <path d="M90 150 L90 450"/>
+            <path d="M84 150 L96 150 M84 450 L96 450"/>
+            <path d="M150 510 L450 510"/>
+            <path d="M150 504 L150 516 M450 504 M450 516"/>
+          </g>
+          <g class="drone__labels" fill="#8a90a0" font-size="13"
+             font-family="'Space Grotesk',sans-serif" opacity="0">
+            <text x="60" y="305" text-anchor="middle" transform="rotate(-90 60 305)">2.4 m SPAN</text>
+            <text x="300" y="538" text-anchor="middle">2.4 m SPAN</text>
+            <text x="312" y="296" fill="#c8ff00">EO/IR GIMBAL</text>
+          </g>
+
+          <!-- cursor-tracking targeting reticle -->
+          <g id="reticle" class="drone__reticle" stroke="#c8ff00"
+             stroke-width="1.5" fill="none" opacity="0">
+            <circle cx="0" cy="0" r="22"/>
+            <path d="M0 -34 L0 -14 M0 14 L0 34 M-34 0 L-14 0 M14 0 L34 0"/>
+          </g>
+        </svg>
+
+        <span class="proj__tag proj__tag--scan">◷ SCANNING AIRFRAME</span>
+        <span class="proj__tag proj__tag--lock">⊕ TRACK LOCK</span>
+      </div>
+    </section>
+
     <!-- CAPABILITIES (horizontal pinned) -->
     <section class="caps" id="capabilities">
       <div class="caps__pin" id="capsPin">
         <div class="caps__head">
           <div class="section-head">
-            <span class="section-head__idx">03</span>
+            <span class="section-head__idx">04</span>
             <span class="section-head__label">CAPABILITIES</span>
           </div>
           <h2 class="caps__title">What the<br/>machines do.</h2>
@@ -252,7 +392,7 @@
     <!-- CTA -->
     <section class="cta" id="contact">
       <div class="cta__glow" aria-hidden="true"></div>
-      <span class="cta__eyebrow">04 — ENGAGE</span>
+      <span class="cta__eyebrow">05 — ENGAGE</span>
       <h2 class="cta__title reveal-text">Request a<br/>classified briefing.</h2>
       <p class="cta__sub">For vetted defence and government partners. We'll walk you through the fleet, the doctrine and the deployment.</p>
       <a href="mailto:briefings@vanta.systems" class="btn btn--primary btn--lg" data-cursor="hover" data-magnetic>
