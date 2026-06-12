@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#05060a" />
+  <title>VANTA DYNAMICS — Autonomous Defence Systems</title>
+  <meta name="description" content="VANTA Dynamics builds autonomous defence systems — adaptive aerial platforms, sensor fusion and edge AI engineered for deterrence." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2305060a'/%3E%3Cpath d='M6 7 L16 25 L26 7 Z' fill='none' stroke='%23c8ff00' stroke-width='2.5'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Preloader -->
+  <div class="preloader" id="preloader">
+    <div class="preloader__inner">
+      <div class="preloader__label">VANTA&nbsp;DYNAMICS</div>
+      <div class="preloader__count"><span id="loaderNum">0</span><span class="preloader__pct">%</span></div>
+      <div class="preloader__bar"><span id="loaderBar"></span></div>
+      <div class="preloader__status" id="loaderStatus">INITIALISING SYSTEMS</div>
+    </div>
+  </div>
+
+  <!-- Custom cursor -->
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
+  <div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+
+  <!-- Noise / grain overlay -->
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- Navigation -->
+  <header class="nav" id="nav">
+    <a href="#top" class="nav__brand" data-cursor="hover">
+      <span class="nav__mark">◣</span> VANTA<span class="nav__brand-dim">DYNAMICS</span>
+    </a>
+    <nav class="nav__links" id="navLinks">
+      <a href="#mission" data-cursor="hover">Mission</a>
+      <a href="#systems" data-cursor="hover">Systems</a>
+      <a href="#capabilities" data-cursor="hover">Capabilities</a>
+      <a href="#contact" data-cursor="hover">Contact</a>
+    </nav>
+    <a href="#contact" class="nav__cta" data-cursor="hover">Request Briefing</a>
+    <button class="nav__burger" id="navBurger" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span>
+    </button>
+  </header>
+
+  <!-- Mobile menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#mission">Mission</a>
+    <a href="#systems">Systems</a>
+    <a href="#capabilities">Capabilities</a>
+    <a href="#contact">Contact</a>
+    <div class="mobile-menu__foot">VANTA DYNAMICS — EST. 2031</div>
+  </div>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero" id="hero">
+      <canvas id="webgl"></canvas>
+      <div class="hero__overlay"></div>
+      <div class="hero__content">
+        <div class="hero__eyebrow" data-fade>
+          <span class="hero__dot"></span> AUTONOMOUS DEFENCE · CLASSIFIED EDGE&nbsp;AI
+        </div>
+        <h1 class="hero__title">
+          <span class="line"><span class="word">Deterrence,</span></span>
+          <span class="line"><span class="word">re-engineered</span></span>
+          <span class="line"><span class="word">for</span> <span class="word hero__title-em">2031.</span></span>
+        </h1>
+        <p class="hero__sub" data-fade>
+          VANTA builds self-directed aerial platforms, distributed sensor fusion
+          and on-device intelligence that decides faster than the threat.
+        </p>
+        <div class="hero__actions" data-fade>
+          <a href="#systems" class="btn btn--primary" data-cursor="hover" data-magnetic>
+            <span>Explore the fleet</span>
+          </a>
+          <a href="#mission" class="btn btn--ghost" data-cursor="hover" data-magnetic>
+            <span>Our doctrine</span>
+          </a>
+        </div>
+      </div>
+      <div class="hero__scroll" data-fade>
+        <span>SCROLL</span>
+        <div class="hero__scroll-line"></div>
+      </div>
+      <div class="hero__meta hero__meta--l" data-fade>34°N&nbsp;118°W</div>
+      <div class="hero__meta hero__meta--r" data-fade>SYSTEM&nbsp;NOMINAL</div>
+    </section>
+
+    <!-- MARQUEE -->
+    <section class="marquee" aria-hidden="true">
+      <div class="marquee__track" id="marquee">
+        <span>AUTONOMY</span><span class="marquee__sep">✸</span>
+        <span>SENSOR FUSION</span><span class="marquee__sep">✸</span>
+        <span>EDGE AI</span><span class="marquee__sep">✸</span>
+        <span>SWARM LOGIC</span><span class="marquee__sep">✸</span>
+        <span>RESILIENCE</span><span class="marquee__sep">✸</span>
+        <span>AUTONOMY</span><span class="marquee__sep">✸</span>
+        <span>SENSOR FUSION</span><span class="marquee__sep">✸</span>
+        <span>EDGE AI</span><span class="marquee__sep">✸</span>
+        <span>SWARM LOGIC</span><span class="marquee__sep">✸</span>
+        <span>RESILIENCE</span><span class="marquee__sep">✸</span>
+      </div>
+    </section>
+
+    <!-- MISSION -->
+    <section class="mission" id="mission">
+      <div class="section-head">
+        <span class="section-head__idx">01</span>
+        <span class="section-head__label">DOCTRINE</span>
+      </div>
+      <h2 class="mission__statement reveal-text">
+        We design machines that protect people —
+        engineered to <em>observe, decide and act</em> at the
+        edge of human reaction time, without ever removing
+        the human from command.
+      </h2>
+      <div class="mission__grid">
+        <div class="mission__card" data-reveal>
+          <h3>Human-on-the-loop</h3>
+          <p>Every autonomous decision is auditable, reversible and gated by operator authority. Ethics encoded in firmware.</p>
+        </div>
+        <div class="mission__card" data-reveal>
+          <h3>Contested by design</h3>
+          <p>Built to function with no GPS, no network and no second chances. Degraded-mode is the default mode.</p>
+        </div>
+        <div class="mission__card" data-reveal>
+          <h3>Open architecture</h3>
+          <p>Modular payloads and a published autonomy API. No black boxes, no vendor lock, no surprises in the field.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SYSTEMS -->
+    <section class="systems" id="systems">
+      <div class="section-head">
+        <span class="section-head__idx">02</span>
+        <span class="section-head__label">THE FLEET</span>
+      </div>
+      <div class="systems__list">
+        <article class="system" data-system>
+          <div class="system__index">/ 01</div>
+          <div class="system__body">
+            <h3 class="system__name">WRAITH&nbsp;V</h3>
+            <p class="system__type">High-altitude autonomous interceptor</p>
+            <p class="system__desc">A solar-assisted loitering platform with 40-hour endurance and on-board threat classification at the edge.</p>
+          </div>
+          <div class="system__specs">
+            <div><b>11 km</b><span>ceiling</span></div>
+            <div><b>40 h</b><span>endurance</span></div>
+            <div><b>0.2 s</b><span>decision loop</span></div>
+          </div>
+        </article>
+
+        <article class="system" data-system>
+          <div class="system__index">/ 02</div>
+          <div class="system__body">
+            <h3 class="system__name">HALO&nbsp;MESH</h3>
+            <p class="system__type">Distributed sensor-fusion grid</p>
+            <p class="system__desc">Hundreds of low-cost nodes forming a single resilient picture of the airspace — self-healing when nodes drop.</p>
+          </div>
+          <div class="system__specs">
+            <div><b>512</b><span>nodes</span></div>
+            <div><b>9 ms</b><span>sync</span></div>
+            <div><b>100%</b><span>mesh uptime</span></div>
+          </div>
+        </article>
+
+        <article class="system" data-system>
+          <div class="system__index">/ 03</div>
+          <div class="system__body">
+            <h3 class="system__name">SENTINEL&nbsp;OS</h3>
+            <p class="system__type">Autonomy &amp; command operating system</p>
+            <p class="system__desc">The brain behind the fleet. Deterministic, formally-verified and certifiable — running every VANTA platform.</p>
+          </div>
+          <div class="system__specs">
+            <div><b>0</b><span>cloud deps</span></div>
+            <div><b>3 ms</b><span>inference</span></div>
+            <div><b>DO-178C</b><span>certifiable</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- CAPABILITIES (horizontal pinned) -->
+    <section class="caps" id="capabilities">
+      <div class="caps__pin" id="capsPin">
+        <div class="caps__head">
+          <div class="section-head">
+            <span class="section-head__idx">03</span>
+            <span class="section-head__label">CAPABILITIES</span>
+          </div>
+          <h2 class="caps__title">What the<br/>machines do.</h2>
+        </div>
+        <div class="caps__track" id="capsTrack">
+          <div class="cap">
+            <span class="cap__num">A·1</span>
+            <h3>Perceive</h3>
+            <p>Fused radar, EO/IR and acoustic streams resolve a target before it crosses the horizon.</p>
+          </div>
+          <div class="cap">
+            <span class="cap__num">A·2</span>
+            <h3>Predict</h3>
+            <p>Trajectory models forecast intent seconds ahead, flagging the difference between a bird and a threat.</p>
+          </div>
+          <div class="cap">
+            <span class="cap__num">A·3</span>
+            <h3>Decide</h3>
+            <p>Edge inference proposes a response inside 200&nbsp;ms — and waits for the operator's authority.</p>
+          </div>
+          <div class="cap">
+            <span class="cap__num">A·4</span>
+            <h3>Coordinate</h3>
+            <p>Swarm logic divides the airspace, sharing tracks so no platform duplicates another's work.</p>
+          </div>
+          <div class="cap">
+            <span class="cap__num">A·5</span>
+            <h3>Endure</h3>
+            <p>Jammed, blinded or cut off, the fleet keeps a coherent picture and a safe default.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="stats" id="stats">
+      <div class="stat" data-stat>
+        <div class="stat__num" data-count="40"><span>0</span></div>
+        <div class="stat__label">hour autonomous endurance</div>
+      </div>
+      <div class="stat" data-stat>
+        <div class="stat__num" data-count="200" data-suffix="ms"><span>0</span></div>
+        <div class="stat__label">edge decision loop</div>
+      </div>
+      <div class="stat" data-stat>
+        <div class="stat__num" data-count="512"><span>0</span></div>
+        <div class="stat__label">sensor nodes per mesh</div>
+      </div>
+      <div class="stat" data-stat>
+        <div class="stat__num" data-count="0" data-zero="ZERO"><span>0</span></div>
+        <div class="stat__label">cloud dependencies</div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta" id="contact">
+      <div class="cta__glow" aria-hidden="true"></div>
+      <span class="cta__eyebrow">04 — ENGAGE</span>
+      <h2 class="cta__title reveal-text">Request a<br/>classified briefing.</h2>
+      <p class="cta__sub">For vetted defence and government partners. We'll walk you through the fleet, the doctrine and the deployment.</p>
+      <a href="mailto:briefings@vanta.systems" class="btn btn--primary btn--lg" data-cursor="hover" data-magnetic>
+        <span>briefings@vanta.systems</span>
+      </a>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__top">
+      <div class="footer__brand">VANTA<span>DYNAMICS</span></div>
+      <p class="footer__tag">Deterrence, re-engineered.</p>
+    </div>
+    <div class="footer__cols">
+      <div>
+        <h4>Systems</h4>
+        <a href="#systems">Wraith V</a>
+        <a href="#systems">Halo Mesh</a>
+        <a href="#systems">Sentinel OS</a>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <a href="#mission">Doctrine</a>
+        <a href="#capabilities">Capabilities</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <div>
+        <h4>Locations</h4>
+        <a href="#">El Segundo, CA</a>
+        <a href="#">Austin, TX</a>
+        <a href="#">Tallinn, EE</a>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2031 VANTA DYNAMICS — A FICTIONAL COMPANY</span>
+      <span>BUILT WITH GSAP · THREE.JS</span>
+    </div>
+  </footer>
+
+  <!-- Libraries (vendored locally — no external runtime dependency) -->
+  <script src="vendor/three.min.js"></script>
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/ScrollTrigger.min.js"></script>
+  <script src="vendor/lenis.min.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
