@@ -188,6 +188,106 @@
     }
   }
 
+  /* ---------- cursor-reactive particle shader ---------- */
+  // smoothed pointer in normalised device coords (-1..1), shared by particles + hover
+  const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+  addEventListener("pointermove", (e) => {
+    mouse.tx = (e.clientX / innerWidth) * 2 - 1;
+    mouse.ty = -((e.clientY / innerHeight) * 2 - 1);
+  }, { passive: true });
+
+  const particles = (function () {
+    const COUNT = isTouch ? 1200 : 2600;
+    const pos = new Float32Array(COUNT * 3);
+    const scale = new Float32Array(COUNT);
+    const phase = new Float32Array(COUNT);
+    for (let i = 0; i < COUNT; i++) {
+      // distribute in a shell around the camera, mostly in front of the cards
+      const rr = 3 + Math.random() * (R + 3);
+      const th = Math.random() * TAU;
+      const ph = Math.acos(2 * Math.random() - 1);
+      pos[i * 3]     = rr * Math.sin(ph) * Math.cos(th);
+      pos[i * 3 + 1] = rr * Math.sin(ph) * Math.sin(th);
+      pos[i * 3 + 2] = rr * Math.cos(ph);
+      scale[i] = 0.6 + Math.random() * 2.4;
+      phase[i] = Math.random();
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    g.setAttribute("aScale", new THREE.BufferAttribute(scale, 1));
+    g.setAttribute("aPhase", new THREE.BufferAttribute(phase, 1));
+
+    const mat = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uMouse: { value: new THREE.Vector2(0, 0) },
+        uMouseVel: { value: 0 },
+        uPixelRatio: { value: Math.min(devicePixelRatio, 2) },
+        uColor: { value: new THREE.Color(0xbfe0ff) },
+      },
+      vertexShader: `
+        uniform float uTime;
+        uniform vec2  uMouse;
+        uniform float uMouseVel;
+        uniform float uPixelRatio;
+        attribute float aScale;
+        attribute float aPhase;
+        varying float vAlpha;
+        void main() {
+          vec3 p = position;
+          // organic drift
+          float t = uTime * 0.18 + aPhase * 6.2831853;
+          p.x += sin(t) * 0.45;
+          p.y += cos(t * 0.9) * 0.45;
+          p.z += sin(t * 0.7) * 0.45;
+          // cursor swirl around the view axis (stronger when the cursor moves)
+          float ang = uMouse.x * (0.35 + uMouseVel * 2.5);
+          float ca = cos(ang), sa = sin(ang);
+          p.xy = mat2(ca, -sa, sa, ca) * p.xy;
+          // cursor push — particles lean toward the pointer with a soft falloff
+          float fall = 1.0 / (1.0 + length(p.xy) * 0.07);
+          p.x += uMouse.x * 3.2 * fall;
+          p.y += uMouse.y * 3.2 * fall;
+          vec4 mv = modelViewMatrix * vec4(p, 1.0);
+          gl_Position = projectionMatrix * mv;
+          gl_PointSize = aScale * uPixelRatio * (90.0 / max(0.1, -mv.z));
+          vAlpha = clamp(1.0 - (-mv.z) / 26.0, 0.0, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        uniform float uMouseVel;
+        varying float vAlpha;
+        void main() {
+          float d = length(gl_PointCoord - 0.5);
+          if (d > 0.5) discard;
+          float a = smoothstep(0.5, 0.0, d) * vAlpha * (0.35 + uMouseVel * 1.2);
+          gl_FragColor = vec4(uColor, a);
+        }
+      `,
+    });
+
+    const pts = new THREE.Points(g, mat);
+    pts.frustumCulled = false;
+    const layer = new THREE.Group();      // own parallax layer
+    layer.add(pts);
+    scene.add(layer);
+
+    return {
+      update(time, vel) {
+        mat.uniforms.uTime.value = time;
+        mat.uniforms.uMouse.value.set(mouse.x, mouse.y);
+        mat.uniforms.uMouseVel.value = vel;
+        // parallax: counter-rotate a little against the gallery + lean with cursor
+        layer.rotation.y = group.rotation.y * 0.12 - mouse.x * 0.15;
+        layer.rotation.x = group.rotation.x * 0.12 - mouse.y * 0.15;
+      },
+    };
+  })();
+
   /* ---------- control state (Lenis-style easing) ---------- */
   const rot = { x: 0, y: 0 };          // applied to the group every frame
   const target = { x: 0, y: 0 };       // where we are easing toward
@@ -294,6 +394,8 @@
   function openProject(mesh) {
     if (isOpen) return;
     isOpen = true; animating = true; openMesh = mesh;
+    if (lenis) lenis.stop();                 // release the wheel so the page can scroll
+    detail.scrollTop = 0;
     document.getElementById("hint").style.opacity = "0";
     if (hovered) { gsap.to(hovered.scale, { x: 1, y: 1, duration: 0.3 }); hovered = null; }
     canvas.classList.remove("pointing");
@@ -338,7 +440,7 @@
         animating = false; isOpen = false; openMesh = null;
         target.y = rot.y; target.x = clamp(rot.x, -PITCH_LIMIT, PITCH_LIMIT);
         vel.x = vel.y = 0;
-        if (lenis) lastScroll = lenis.scroll || 0;
+        if (lenis) { lenis.start(); lastScroll = lenis.scroll || 0; }
       },
     });
     tl.to(camera.position, { z: 0, duration: 0.9, ease: "power3.inOut" }, 0)
@@ -351,9 +453,17 @@
   addEventListener("keydown", (e) => { if (e.key === "Escape" && isOpen) closeProject(); });
 
   /* ---------- render loop ---------- */
+  let prevMouseX = 0;
   function frame(t) {
     requestAnimationFrame(frame);
     if (lenis) lenis.raf(t);
+
+    // smooth the pointer (the particle field's "feel")
+    mouse.x += (mouse.tx - mouse.x) * 0.08;
+    mouse.y += (mouse.ty - mouse.y) * 0.08;
+    const mvel = Math.min(0.5, Math.abs(mouse.x - prevMouseX) * 6);
+    prevMouseX = mouse.x;
+    particles.update(t * 0.001, mvel);
 
     if (!animating) {
       if (!dragging) {
