@@ -20,20 +20,29 @@ literary serif, a page-turning book, and 3D candlelight.
 - **The Collected Works** — a **scroll-driven page-turning book** (CSS 3D leaves,
   GSAP-pinned) cycling quotes from nine of his books.
 - **Creed** — dense Notes-from-Underground columns around a floating black volume.
+- **In His Own Words** — a deck of quote cards that **fan out with GSAP Flip** on
+  enter, leading into…
+- **A Life in Six Rooms** — an **immersive 3D life tour** (Three.js): a torch-lit
+  camera journey through stylised architecture from his world — the Moscow hospital,
+  the Semyonovsky scaffold, the Siberian palisade, a Petersburg tenement canyon, an
+  Orthodox church with onion domes, and the final candle — each "room" cross-fading a
+  **vintage sepia plate** and a chapter of his life as you scroll.
 - **Works gallery** + an **outro** with rising embers and `1821 — 1881`.
 - **Blipping cursor** — the pointer emits Dostoevskian words (SUFFERING, FAITH,
   REDEMPTION, СТРАДАНИЕ…) as you move.
 
 ## Stack
 
-- **[Three.js](https://threejs.org/)** — candle + ember particle scenes
-- **[GSAP](https://gsap.com/) + ScrollTrigger** — reveals, redaction bars, the pinned
-  book-flip timeline, parallax, loader
+- **[Three.js](https://threejs.org/)** — candle + ember particle scenes and the
+  architectural 3D life-tour corridor
+- **[GSAP](https://gsap.com/)** — **ScrollTrigger** (reveals, redaction bars, the
+  pinned book-flip, the pinned scrubbed life-tour camera, parallax) and **Flip**
+  (the fanning quote deck)
 - **[Lenis](https://lenis.darkroom.engineering/)** — smooth scroll, synced to ScrollTrigger
 
 Everything is **self-contained** — libraries vendored in `/vendor`, artwork generated
-in SVG/canvas/WebGL, no external runtime assets (fonts are the only CDN call, with
-serif/sans fallbacks).
+in SVG/canvas/WebGL (including the vintage sepia life plates), no external runtime
+assets (fonts are the only CDN call, with serif/sans fallbacks).
 
 ## Run
 
@@ -47,8 +56,8 @@ python3 -m http.server 8000   # then open http://localhost:8000
 | --- | --- |
 | `index.html` | All sections + content |
 | `styles.css` | Palette, grain, book-flip 3D, responsive |
-| `app.js` | Three.js scenes, Lenis, ScrollTrigger reveals, book-flip, cursor blips, procedural engraving |
-| `vendor/` | three, gsap, ScrollTrigger, lenis |
+| `app.js` | Three.js scenes (candle, embers, life-tour architecture), Lenis, ScrollTrigger reveals + book-flip + life-tour, Flip quote deck, cursor blips, procedural engravings/plates |
+| `vendor/` | three, gsap, ScrollTrigger, Flip, lenis |
 
 ## Notes
 

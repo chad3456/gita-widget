@@ -108,7 +108,7 @@
       <blockquote class="quote__text reveal-words">
         “Pain and suffering are always inevitable for a large intelligence and a deep heart.”
       </blockquote>
-      <cite class="quote__cite">— CRIME AND PUNISHMENT, 1866</cite>
+      <cite class="quote__cite">— CRIME AND PUNISHMENT · 1866</cite>
     </section>
 
     <!-- ============ NEWSPAPER (mock 1849) ============ -->
@@ -175,9 +175,34 @@
       </div>
     </section>
 
+    <!-- ============ QUOTES DECK (Flip) ============ -->
+    <section class="quotes" id="quotes">
+      <p class="quotes__kicker">[ 03 — IN HIS OWN WORDS ]</p>
+      <h2 class="quotes__title reveal">A few sentences<br/>that hold a whole world.</h2>
+      <div class="quotes__deck" id="quotesDeck" aria-label="Quotation cards"></div>
+      <a class="quotes__enter" id="enterLife" href="#lifetour">
+        <span>ENTER HIS LIFE</span>
+        <span class="quotes__enter-arrow">↓</span>
+      </a>
+    </section>
+
+    <!-- ============ 3D LIFE TOUR ============ -->
+    <section class="life" id="lifetour">
+      <div class="life__pin" id="lifePin">
+        <canvas id="lifeCanvas"></canvas>
+        <div class="life__veil" aria-hidden="true"></div>
+        <div class="life__chrome">
+          <span class="life__label">[ 04 — A LIFE IN SIX ROOMS ]</span>
+          <div class="life__rail"><span id="lifeProgress"></span></div>
+        </div>
+        <div class="life__stations" id="lifeStations"><!-- injected --></div>
+        <div class="life__hint" id="lifeHint">SCROLL TO WALK THROUGH HIS LIFE</div>
+      </div>
+    </section>
+
     <!-- ============ WORKS GALLERY ============ -->
     <section class="works" id="works">
-      <p class="works__kicker">[ 03 — THE GREAT NOVELS ]</p>
+      <p class="works__kicker">[ 05 — THE GREAT NOVELS ]</p>
       <div class="works__grid" id="worksGrid"></div>
     </section>
 
@@ -189,7 +214,7 @@
           “The mystery of human existence lies not in just staying alive,
           but in finding something to live for.”
         </blockquote>
-        <cite class="outro__cite">— THE BROTHERS KARAMAZOV, 1880</cite>
+        <cite class="outro__cite">— THE BROTHERS KARAMAZOV · 1880</cite>
         <p class="outro__dates">1821 &nbsp;—&nbsp; 1881</p>
       </div>
       <div class="outro__corners">
@@ -203,6 +228,7 @@
   <script src="vendor/three.min.js"></script>
   <script src="vendor/gsap.min.js"></script>
   <script src="vendor/ScrollTrigger.min.js"></script>
+  <script src="vendor/Flip.min.js"></script>
   <script src="vendor/lenis.min.js"></script>
   <script src="app.js"></script>
 </body>

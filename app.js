@@ -8,7 +8,9 @@
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const isTouch = matchMedia("(pointer: coarse)").matches;
   const hasGSAP = typeof gsap !== "undefined";
+  const hasFlip = typeof Flip !== "undefined";
   if (hasGSAP && typeof ScrollTrigger !== "undefined") gsap.registerPlugin(ScrollTrigger);
+  if (hasGSAP && hasFlip) gsap.registerPlugin(Flip);
 
   /* ---------------------------------------------------------
      SMOOTH SCROLL
@@ -450,6 +452,333 @@
   }
 
   /* ---------------------------------------------------------
+     QUOTES DECK  (GSAP Flip fan-out)
+  --------------------------------------------------------- */
+  const QUOTES = [
+    { q: "Beauty is mysterious as well as terrible. God and the devil are fighting there, and the battlefield is the heart of man.", c: "THE BROTHERS KARAMAZOV" },
+    { q: "Taking a new step, uttering a new word, is what people fear most.", c: "CRIME AND PUNISHMENT" },
+    { q: "The darker the night, the brighter the stars; the deeper the grief, the closer is God.", c: "CRIME AND PUNISHMENT" },
+    { q: "Man only likes to count his troubles; he does not count his joys.", c: "NOTES FROM UNDERGROUND" },
+    { q: "If you want to be respected by others, the great thing is to respect yourself.", c: "THE INSULTED AND HUMILIATED" },
+    { q: "Power is given only to those who dare to lower themselves and pick it up.", c: "CRIME AND PUNISHMENT" },
+  ];
+  function buildQuotes() {
+    const deck = document.getElementById("quotesDeck");
+    if (!deck) return;
+    deck.classList.add("stacked");
+    deck.innerHTML = QUOTES.map((x, i) => {
+      const r = (i - (QUOTES.length - 1) / 2) * 4;
+      return `<figure class="qc" style="--r:${r}deg">
+        <span class="qc__mark">“</span>
+        <blockquote class="qc__q">${x.q}</blockquote>
+        <figcaption class="qc__c">— ${x.c}</figcaption>
+      </figure>`;
+    }).join("");
+  }
+  function initQuotesFlip() {
+    const deck = document.getElementById("quotesDeck");
+    if (!deck) return;
+    const cards = deck.querySelectorAll(".qc");
+    if (!hasGSAP || !hasFlip || reduce) { deck.classList.remove("stacked"); return; }
+    ScrollTrigger.create({
+      trigger: "#quotes",
+      start: "top 62%",
+      once: true,
+      onEnter() {
+        const state = Flip.getState(cards, { props: "rotate" }); // capture stacked layout + rotation
+        deck.classList.remove("stacked");                        // reflow to the spread layout
+        Flip.from(state, {
+          duration: 1.1, ease: "power3.out", stagger: 0.07, absolute: true,
+        });
+      },
+    });
+  }
+
+  /* ---------------------------------------------------------
+     VINTAGE SEPIA PLATES (procedural engravings of his life)
+  --------------------------------------------------------- */
+  const SEPIA = { sky: "#cdb286", paper: "#ddc69a", mid: "#a8814a", dark: "#3a2a16", ink: "#241608" };
+  function plateSVG(kind) {
+    const open = `<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">`;
+    const sky = `<defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${SEPIA.sky}"/><stop offset="1" stop-color="${SEPIA.paper}"/></linearGradient></defs>
+      <rect width="400" height="300" fill="url(#sk)"/>`;
+    const L = `stroke="${SEPIA.ink}" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"`;
+    let s = "";
+    if (kind === "moscow") {
+      s = `<rect x="40" y="120" width="320" height="140" fill="${SEPIA.mid}"/>
+      <polygon points="120,120 280,120 200,72" fill="${SEPIA.dark}"/>
+      <polygon points="120,120 280,120 200,72" ${L}/>
+      ${[0,1,2,3,4,5].map(i=>`<rect x="${108+i*32}" y="140" width="14" height="90" fill="${SEPIA.dark}"/>`).join("")}
+      <rect x="40" y="120" width="320" height="140" ${L}/>
+      <rect x="92" y="130" width="216" height="14" fill="${SEPIA.dark}"/>
+      ${[0,1,2,3,4,5,6].map(i=>`<rect x="${52+i*44}" y="232" width="20" height="26" fill="${SEPIA.dark}"/>`).join("")}
+      <rect x="0" y="258" width="400" height="42" fill="${SEPIA.dark}"/>`;
+    } else if (kind === "scaffold") {
+      s = `<rect x="60" y="200" width="280" height="20" fill="${SEPIA.dark}"/>
+      <rect x="80" y="120" width="12" height="92" fill="${SEPIA.dark}"/>
+      <rect x="308" y="120" width="12" height="92" fill="${SEPIA.dark}"/>
+      <rect x="80" y="120" width="240" height="12" fill="${SEPIA.dark}"/>
+      ${[0,1,2,3].map(i=>`<g transform="translate(${130+i*40},150)"><circle cx="0" cy="0" r="9" fill="${SEPIA.ink}"/><path d="M0 9 V40 M-9 20 H9 M-7 70 L0 40 L7 70" ${L}/></g>`).join("")}
+      <rect x="0" y="220" width="400" height="80" fill="${SEPIA.mid}"/>
+      ${[...Array(40)].map(()=>`<circle cx="${Math.random()*400|0}" cy="${Math.random()*300|0}" r="1.5" fill="${SEPIA.paper}" opacity="0.7"/>`).join("")}`;
+    } else if (kind === "prison") {
+      s = `<rect x="0" y="210" width="400" height="90" fill="${SEPIA.mid}"/>
+      ${[...Array(16)].map((_,i)=>`<g transform="translate(${10+i*25},70)"><rect x="0" y="0" width="18" height="150" fill="${i%2?SEPIA.dark:SEPIA.ink}"/><polygon points="0,0 18,0 9,-12" fill="${SEPIA.dark}"/></g>`).join("")}
+      <rect x="150" y="120" width="80" height="100" fill="${SEPIA.ink}"/>
+      <g transform="translate(190,150)"><circle cx="0" cy="0" r="10" fill="${SEPIA.paper}"/><path d="M0 10 V46 M-10 24 H10 M-8 78 L0 46 L8 78" stroke="${SEPIA.paper}" stroke-width="2" fill="none"/></g>
+      ${[...Array(30)].map(()=>`<circle cx="${Math.random()*400|0}" cy="${Math.random()*210|0}" r="1.4" fill="${SEPIA.paper}" opacity="0.6"/>`).join("")}`;
+    } else if (kind === "petersburg") {
+      s = `<rect x="0" y="40" width="150" height="220" fill="${SEPIA.mid}"/>
+      <rect x="250" y="20" width="150" height="240" fill="${SEPIA.dark}"/>
+      ${[...Array(5)].map((_,r)=>[...Array(3)].map((_,c)=>`<rect x="${20+c*40}" y="${70+r*38}" width="20" height="26" fill="${SEPIA.dark}"/>`).join("")).join("")}
+      ${[...Array(5)].map((_,r)=>[...Array(3)].map((_,c)=>`<rect x="${270+c*40}" y="${50+r*40}" width="20" height="28" fill="${SEPIA.paper}" opacity="0.55"/>`).join("")).join("")}
+      <rect x="150" y="180" width="100" height="120" fill="${SEPIA.ink}"/>
+      <circle cx="200" cy="60" r="22" fill="${SEPIA.paper}" opacity="0.8"/>
+      <rect x="184" y="150" width="6" height="110" fill="${SEPIA.dark}"/><circle cx="187" cy="148" r="7" fill="${SEPIA.dark}"/>
+      <rect x="0" y="270" width="400" height="30" fill="${SEPIA.dark}"/>`;
+    } else if (kind === "church") {
+      const dome = (x,w,h)=>`<ellipse cx="${x}" cy="${h}" rx="${w}" ry="${w*1.15}" fill="${SEPIA.dark}"/>
+        <path d="M${x} ${h-w*1.15} v-14" ${L}/><path d="M${x-6} ${h-w*1.15-7} h12" ${L}/>`;
+      s = `<rect x="60" y="150" width="280" height="120" fill="${SEPIA.mid}"/>
+      <rect x="170" y="90" width="60" height="80" fill="${SEPIA.dark}"/>
+      ${dome(200,34,86)}
+      <rect x="92" y="170" width="36" height="100" fill="${SEPIA.dark}"/>${dome(110,16,166)}
+      <rect x="272" y="170" width="36" height="100" fill="${SEPIA.dark}"/>${dome(290,16,166)}
+      ${[0,1,2].map(i=>`<rect x="${120+i*54}" y="200" width="22" height="50" fill="${SEPIA.ink}"/>`).join("")}
+      <rect x="0" y="268" width="400" height="32" fill="${SEPIA.dark}"/>`;
+    } else { // candle
+      s = `<rect width="400" height="300" fill="${SEPIA.ink}"/>
+      <rect x="180" y="150" width="40" height="120" fill="${SEPIA.paper}"/>
+      <rect x="178" y="146" width="44" height="10" fill="${SEPIA.mid}"/>
+      <path d="M200 150 q-16 -28 0 -54 q16 26 0 54Z" fill="${SEPIA.sky}"/>
+      <path d="M200 150 q-8 -16 0 -32 q8 16 0 32Z" fill="${SEPIA.paper}"/>
+      <circle cx="200" cy="110" r="70" fill="${SEPIA.mid}" opacity="0.18"/>
+      <rect x="120" y="60" width="10" height="80" fill="${SEPIA.mid}"/><rect x="103" y="78" width="44" height="9" fill="${SEPIA.mid}"/>`;
+    }
+    return open + sky + s + `</svg>`;
+  }
+
+  /* ---------------------------------------------------------
+     3D LIFE TOUR — six rooms of a life
+  --------------------------------------------------------- */
+  const STATIONS = [
+    { year: "1821", place: "MOSCOW · MARIINSKY HOSPITAL", side: "left",  plate: "moscow",
+      head: "Born in a wing of a hospital for the poor, among the sick and the destitute.",
+      quote: "Man is a mystery. I occupy myself with it, for I wish to be a man." },
+    { year: "1849", place: "ST. PETERSBURG · SEMYONOVSKY SQ.", side: "right", plate: "scaffold",
+      head: "Condemned for reading forbidden letters, led to the firing posts — reprieved as the rifles rose.",
+      quote: "Life is a gift, life is happiness; each minute might have been an eternity." },
+    { year: "1850", place: "SIBERIA · OMSK FORTRESS", side: "left", plate: "prison",
+      head: "Four years of penal servitude in chains — the years he called the House of the Dead.",
+      quote: "I came to feel that a human being can become accustomed to anything." },
+    { year: "1866", place: "ST. PETERSBURG · STOLYARNY LANE", side: "right", plate: "petersburg",
+      head: "In a cramped garret above the Haymarket he wrote Crime and Punishment, page by page, to pay his debts.",
+      quote: "Taking a new step, uttering a new word, is what people fear most." },
+    { year: "1878", place: "OPTINA · THE MONASTERY", side: "left", plate: "church",
+      head: "Grieving a lost child, he sought the elders — and found Father Zosima for The Brothers Karamazov.",
+      quote: "Love all God's creation, the whole of it and every grain of sand." },
+    { year: "1881", place: "ST. PETERSBURG · KUZNECHNY LANE", side: "right", plate: "candle",
+      head: "He died at fifty-nine; through the winter streets, thousands followed his coffin.",
+      quote: "Do not lose heart — the darker the night, the brighter the stars." },
+  ];
+  function buildStations() {
+    const wrap = document.getElementById("lifeStations");
+    if (!wrap) return;
+    wrap.innerHTML = STATIONS.map((s, i) => `
+      <article class="station station--${s.side}" data-st="${i}">
+        <div class="station__plate">
+          <figure class="plate">
+            <div class="plate__img">${plateSVG(s.plate)}</div>
+            <figcaption class="plate__cap">${s.place} · ${s.year}</figcaption>
+          </figure>
+        </div>
+        <div class="station__text">
+          <div class="station__year">${s.year}</div>
+          <div class="station__place">${s.place}</div>
+          <p class="station__head">${s.head}</p>
+          <p class="station__quote"><b>“</b>${s.quote}<b>”</b></p>
+        </div>
+      </article>`).join("");
+  }
+
+  // -- 3D architecture builder --
+  function lifeTour() {
+    const canvas = document.getElementById("lifeCanvas");
+    if (!canvas || typeof THREE === "undefined") return null;
+    const N = STATIONS.length, SPACING = 60;
+    const BG = 0x0a0705;
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(BG);
+    scene.fog = new THREE.Fog(BG, 24, 120);
+    const camera = new THREE.PerspectiveCamera(62, canvas.clientWidth / canvas.clientHeight, 0.1, 400);
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    const resize = () => {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+    };
+    resize(); addEventListener("resize", resize);
+
+    scene.add(new THREE.AmbientLight(0x40342a, 0.7));
+    const key = new THREE.DirectionalLight(0xffd9a0, 0.8);
+    key.position.set(-6, 14, 8); scene.add(key);
+    const torch = new THREE.PointLight(0xffb060, 2.6, 70, 2);
+    scene.add(torch);
+
+    const box = (w, h, d, color, x, y, z, rx, ry) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.9 }));
+      m.position.set(x, y, z);
+      if (rx) m.rotation.x = rx; if (ry) m.rotation.y = ry;
+      return m;
+    };
+    const cyl = (rt, rb, h, color, x, y, z) => {
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 24),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.85 }));
+      m.position.set(x, y, z); return m;
+    };
+    // ground for the whole corridor
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(120, N * SPACING + 160),
+      new THREE.MeshStandardMaterial({ color: 0x140d09, roughness: 1 }));
+    ground.rotation.x = -Math.PI / 2; ground.position.set(0, -8, -((N - 1) * SPACING) / 2);
+    scene.add(ground);
+
+    function chapter(i) {
+      const g = new THREE.Group(); g.position.z = -i * SPACING;
+      if (i === 0) {                       // Moscow — neoclassical hospital
+        g.add(box(46, 22, 6, 0xb8a079, 0, 3, -10));
+        for (let c = 0; c < 7; c++) g.add(cyl(1, 1.1, 18, 0xc8b48a, -18 + c * 6, 1, -5));
+        g.add(box(50, 4, 8, 0x9c855f, 0, 16, -10));
+        const ped = box(26, 10, 5, 0x8a734f, 0, 22, -10); ped.rotation.z = 0; g.add(ped);
+      } else if (i === 1) {                // Scaffold
+        g.add(box(20, 1.4, 20, 0x5a4632, 0, -6, 0));
+        g.add(box(1.4, 16, 1.4, 0x3a2c1e, -8, 1, -6));
+        g.add(box(1.4, 16, 1.4, 0x3a2c1e, 8, 1, -6));
+        g.add(box(18, 1.4, 1.4, 0x3a2c1e, 0, 9, -6));
+        for (let s = 0; s < 5; s++) g.add(box(1.6, 9, 1.6, 0x2c2118, -18 + s * 9, 0.5, 16, 0, 0.2)); // rifles/soldiers
+      } else if (i === 2) {                // Siberian palisade
+        for (let s = -1; s <= 1; s += 2) {
+          for (let z = -8; z <= 18; z += 3.4) g.add(cyl(1.1, 1.1, 17, 0x4a3829, s * 15, 0, z));
+        }
+        g.add(box(1.2, 14, 1.2, 0x2c2018, -4, 0, -10));
+        g.add(box(1.2, 14, 1.2, 0x2c2018, 4, 0, -10));
+        g.add(box(10, 1.4, 1.2, 0x2c2018, 0, 7, -10));
+      } else if (i === 3) {                // Petersburg tenements (street canyon)
+        const winTex = windowTexture();
+        const facade = (x) => {
+          const m = new THREE.Mesh(new THREE.BoxGeometry(14, 52, 26),
+            new THREE.MeshStandardMaterial({ color: 0xb59a52, roughness: 0.9, map: winTex }));
+          m.position.set(x, 8, 0); return m;
+        };
+        g.add(facade(-16)); g.add(facade(16));
+        for (let s = 0; s < 6; s++) g.add(box(7 - s, 1.4, 7, 0x3a2c1e, 0, -6.6 + s * 1.4, 14 - s * 2)); // staircase
+      } else if (i === 4) {                // Orthodox church
+        g.add(box(34, 16, 18, 0xe6dcc6, 0, 0, -8));
+        g.add(cyl(5, 5, 22, 0xe6dcc6, 0, 14, -8));
+        const onion = (x, r, y) => {
+          const d = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 18),
+            new THREE.MeshStandardMaterial({ color: 0xc8a24a, roughness: 0.35, metalness: 0.6 }));
+          d.scale.y = 1.5; d.position.set(x, y, -8); g.add(d);
+          g.add(box(0.5, r * 1.4, 0.5, 0xc8a24a, x, y + r * 1.6, -8));
+          g.add(box(r * 0.9, 0.5, 0.5, 0xc8a24a, x, y + r * 1.4, -8));
+        };
+        onion(0, 5.5, 28);
+        onion(-12, 2.6, 12); onion(12, 2.6, 12);
+      } else if (i === 5) {                // Death — candle + cross of light
+        g.add(cyl(1.6, 1.8, 12, 0xe7dcc0, 0, -2, 0));
+        const fl = new THREE.Mesh(new THREE.ConeGeometry(0.7, 2.4, 16),
+          new THREE.MeshBasicMaterial({ color: 0xffb24d, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+        fl.position.set(0, 5.4, 0); g.add(fl); g.userData.flame = fl;
+        const cl = new THREE.PointLight(0xffb060, 3, 40, 2); cl.position.set(0, 6, 2); g.add(cl);
+        g.add(box(1.4, 16, 1.4, 0x2a1d10, 0, 6, -14));
+        g.add(box(8, 1.4, 1.4, 0x2a1d10, 0, 10, -14));
+      }
+      scene.add(g); return g;
+    }
+    const chapters = []; for (let i = 0; i < N; i++) chapters.push(chapter(i));
+
+    const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+    addEventListener("pointermove", (e) => {
+      mouse.tx = e.clientX / innerWidth - 0.5; mouse.ty = e.clientY / innerHeight - 0.5;
+    }, { passive: true });
+
+    const START_Z = 30, END_Z = 30 - (N - 1) * SPACING;
+    let prog = 0, cur = 0;
+    return {
+      setProgress(p) { prog = p; },
+      render(t) {
+        mouse.x += (mouse.tx - mouse.x) * 0.05;
+        mouse.y += (mouse.ty - mouse.y) * 0.05;
+        const z = START_Z + (END_Z - START_Z) * prog;
+        camera.position.set(mouse.x * 6, 2 + mouse.y * -3, z);
+        camera.lookAt(mouse.x * 3, 1.5, z - 30);
+        torch.position.set(camera.position.x, camera.position.y + 3, camera.position.z + 2);
+        const last = chapters[5];
+        if (last && last.userData.flame) {
+          last.userData.flame.scale.setScalar(0.9 + Math.random() * 0.18);
+        }
+        renderer.render(scene, camera);
+      },
+    };
+  }
+  // small canvas texture: warm windows on a facade
+  function windowTexture() {
+    const c = document.createElement("canvas"); c.width = 128; c.height = 256;
+    const x = c.getContext("2d");
+    x.fillStyle = "#b59a52"; x.fillRect(0, 0, 128, 256);
+    for (let r = 0; r < 9; r++) for (let col = 0; col < 3; col++) {
+      x.fillStyle = Math.random() > 0.55 ? "#ffd98a" : "#2a2012";
+      x.fillRect(20 + col * 36, 16 + r * 26, 18, 16);
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(1, 1);
+    return tex;
+  }
+
+  function initLifeTour(tour) {
+    if (!tour || !hasGSAP || !ScrollTrigger) return;
+    const stations = gsap.utils.toArray(".station");
+    gsap.set(stations, { opacity: 0 });
+    if (stations[0]) gsap.set(stations[0], { opacity: 1 });
+    const N = stations.length;
+    let active = 0;
+    const fill = document.getElementById("lifeProgress");
+    const hint = document.getElementById("lifeHint");
+
+    if (reduce) {
+      // static fallback: stack stations vertically, show all, no pin
+      gsap.set(stations, { opacity: 1, position: "relative" });
+      tour.setProgress(0);
+      return;
+    }
+
+    ScrollTrigger.create({
+      trigger: "#lifetour",
+      start: "top top",
+      end: () => "+=" + N * Math.max(innerHeight, 640),
+      pin: "#lifePin",
+      scrub: 1,
+      anticipatePin: 1,
+      invalidateOnRefresh: true,
+      onUpdate(self) {
+        tour.setProgress(self.progress);
+        if (fill) fill.style.width = (self.progress * 100).toFixed(1) + "%";
+        if (hint) hint.style.opacity = self.progress > 0.04 ? "0" : "0.8";
+        const idx = Math.min(N - 1, Math.round(self.progress * (N - 1)));
+        if (idx !== active) {
+          gsap.to(stations[active], { opacity: 0, y: -24, duration: 0.45, ease: "power2.in" });
+          active = idx;
+          gsap.fromTo(stations[active], { opacity: 0, y: 28 },
+            { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" });
+        }
+      },
+    });
+  }
+
+  /* ---------------------------------------------------------
      RENDER LOOP (three scenes)
   --------------------------------------------------------- */
   const scenes = [];
@@ -468,6 +797,8 @@
     const start = () => {
       initReveals();
       initBook();
+      initQuotesFlip();
+      initLifeTour(lifeTourScene);
       initRail();
       if (ScrollTrigger) ScrollTrigger.refresh();
     };
@@ -491,16 +822,21 @@
   /* ---------------------------------------------------------
      INIT
   --------------------------------------------------------- */
+  let lifeTourScene = null;
   addEventListener("DOMContentLoaded", () => {
     initLenis();
     initCursor();
     drawPrisoners();
     buildWorks();
+    buildQuotes();
+    buildStations();
 
     const s1 = candleScene(document.getElementById("webgl"));
     const s2 = emberScene(document.getElementById("webgl2"));
+    lifeTourScene = lifeTour();
     if (s1) scenes.push(s1);
     if (s2) scenes.push(s2);
+    if (lifeTourScene) scenes.push(lifeTourScene);
     requestAnimationFrame(loop);
 
     boot();
