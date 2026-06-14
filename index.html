@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0c0a09" />
+  <title>DOSTOEVSKY — Notes from the Soul</title>
+  <meta name="description" content="An immersive literary experience for Fyodor Dostoevsky — his thoughts, quotes and philosophy, rendered as a scrollable vintage manuscript." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0a09'/%3E%3Cpath d='M15 4h2v24h-2z M9 9h14v2H9z M11 15h10v1.6H11z' fill='%23c8a24a'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <!-- film grain + vignette -->
+  <div class="grain" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <!-- custom cursor + blipping words -->
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
+  <div class="blips" id="blips" aria-hidden="true"></div>
+
+  <!-- recurring concept label -->
+  <div class="brand" id="brand">THE&nbsp;DOUBLE</div>
+
+  <!-- progress rail -->
+  <div class="rail" aria-hidden="true"><span id="railFill"></span></div>
+
+  <!-- loader -->
+  <div class="loader" id="loader">
+    <div class="loader__mark">Ф · Д</div>
+    <div class="loader__line"><span id="loaderBar"></span></div>
+    <div class="loader__pct"><span id="loaderPct">0</span></div>
+    <div class="loader__cap">ENTERING THE UNDERGROUND</div>
+  </div>
+
+  <main id="scroller">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="hero">
+      <canvas id="webgl"></canvas>
+      <div class="hero__corners">
+        <span class="corner corner--tl">SUFFERING IS THE<br/>SOLE ORIGIN OF CONSCIOUSNESS</span>
+        <span class="corner corner--tr">BEAUTY WILL<br/>SAVE THE WORLD</span>
+        <span class="corner corner--bl">TO LIVE IS<br/>TO SUFFER</span>
+        <span class="corner corner--br">MAN IS<br/>A MYSTERY</span>
+      </div>
+      <div class="hero__center">
+        <p class="hero__eyebrow">ФЁДОР МИХАЙЛОВИЧ ДОСТОЕВСКИЙ</p>
+        <h1 class="hero__title" aria-label="Dostoevsky">
+          <span class="ht-line"><span>DOSTO</span></span>
+          <span class="ht-line"><span>EVSKY</span></span>
+        </h1>
+        <p class="hero__sub">NOVELIST · PHILOSOPHER · PROPHET OF THE MODERN SOUL &nbsp;·&nbsp; 1821 — 1881</p>
+      </div>
+      <div class="hero__scroll" id="heroScroll">
+        <span>DESCEND</span>
+        <span class="hero__scroll-l"></span>
+      </div>
+    </section>
+
+    <!-- ============ INTRO STATEMENT ============ -->
+    <section class="statement" id="intro">
+      <p class="statement__kicker">[ 01 — THE QUESTION ]</p>
+      <h2 class="statement__text reveal">
+        Deep inside every human being, he believed, runs a fault-line between
+        <em>the angel and the beast</em> — and the whole drama of a life is which
+        side we choose, again and again, in the dark.
+      </h2>
+    </section>
+
+    <!-- ============ QUOTE + PORTRAIT ============ -->
+    <section class="quote" id="quote">
+      <div class="quote__portrait" aria-hidden="true">
+        <svg viewBox="0 0 600 720" preserveAspectRatio="xMidYMid meet">
+          <g fill="none" stroke="#0c0a09" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <!-- skull / head mass -->
+            <path d="M300 90c-78 0-128 56-128 150 0 70 18 120 40 168 14 30 30 52 88 52s74-22 88-52c22-48 40-98 40-168 0-94-50-150-128-150z"/>
+            <!-- high forehead hatching -->
+            <path d="M225 150c40-26 110-26 150 0"/>
+            <path d="M232 172c38-22 98-22 136 0"/>
+            <!-- eyes (deep set) -->
+            <path d="M238 250c20-16 52-16 70 0"/>
+            <path d="M292 250c20-16 52-16 70 0"/>
+            <circle cx="273" cy="262" r="6" fill="#0c0a09"/>
+            <circle cx="327" cy="262" r="6" fill="#0c0a09"/>
+            <!-- brow furrow -->
+            <path d="M296 236v34"/>
+            <!-- nose -->
+            <path d="M300 268c-6 28-14 46-26 58 10 10 30 10 52 0-12-12-20-30-26-58z"/>
+            <!-- moustache + full beard (his signature) -->
+            <path d="M255 348c25 16 70 16 90 0"/>
+            <path d="M210 360c20 70 44 150 90 168 46-18 70-98 90-168-30 34-60 44-90 44s-60-10-90-44z"/>
+            <path d="M236 392c14 40 36 96 64 110"/>
+            <path d="M364 392c-14 40-36 96-64 110"/>
+            <path d="M270 430c10 30 20 56 30 70"/>
+            <path d="M330 430c-10 30-20 56-30 70"/>
+            <!-- hair tufts -->
+            <path d="M188 210c-14-46 6-96 44-118"/>
+            <path d="M412 210c14-46-6-96-44-118"/>
+            <path d="M196 250c-22 6-34 30-30 56"/>
+            <path d="M404 250c22 6 34 30 30 56"/>
+          </g>
+        </svg>
+      </div>
+      <blockquote class="quote__text reveal-words">
+        “Pain and suffering are always inevitable for a large intelligence and a deep heart.”
+      </blockquote>
+      <cite class="quote__cite">— CRIME AND PUNISHMENT, 1866</cite>
+    </section>
+
+    <!-- ============ NEWSPAPER (mock 1849) ============ -->
+    <section class="paper" id="paper">
+      <div class="paper__sheet">
+        <div class="paper__masthead">
+          <span>THE PETERSBURG HERALD — IMPERIAL EDITION</span>
+          <span>FRIDAY, DECEMBER 22, 1849 — №. 1849</span>
+          <span class="paper__rule"></span>
+          <span class="paper__verified">ALL DISPATCHES APPROVED BY THE THIRD SECTION</span>
+        </div>
+        <h2 class="paper__head">PARDON GRANTED AT THE SCAFFOLD</h2>
+        <p class="paper__dek">PETRASHEVSKY CIRCLE REPRIEVED — DEATH COMMUTED TO SIBERIAN SERVITUDE BY IMPERIAL CLEMENCY.</p>
+        <div class="paper__body">
+          <ul class="paper__bullets">
+            <li>THE CONDEMNED WERE LED TO SEMYONOVSKY SQUARE<span class="redact" style="width:62%"></span></li>
+            <li>SENTENCE READ; RIFLES RAISED BEFORE THE FIRST RANK<span class="redact" style="width:48%"></span></li>
+            <li>A COURIER ARRIVED BEARING THE TSAR'S MERCY<span class="redact" style="width:70%"></span></li>
+            <li>ONE PRISONER, A WRITER, WAS SENT EASTWARD IN CHAINS<span class="redact" style="width:40%"></span></li>
+          </ul>
+          <p class="paper__foot">MINISTRY OF ORDER — THE EMPIRE IS SERENE — NOTHING IS AMISS</p>
+        </div>
+      </div>
+      <figure class="paper__plate" aria-label="Engraving of prisoners marched to Siberian katorga">
+        <svg id="prisoners" viewBox="0 0 760 600" preserveAspectRatio="xMidYMid slice"></svg>
+        <figcaption>THE HOUSE OF THE DEAD — A COLUMN MARCHED EAST. ALL ACCOUNTS HAVE BEEN CORRECTED.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ============ BOOK FLIP ============ -->
+    <section class="book" id="book">
+      <div class="book__pin" id="bookPin">
+        <p class="book__kicker">[ 02 — THE COLLECTED WORKS ]</p>
+        <div class="book__stage" id="bookStage">
+          <div class="book__shadow"></div>
+          <!-- leaves injected by JS -->
+        </div>
+        <div class="book__hint" id="bookHint">SCROLL TO TURN THE PAGE</div>
+      </div>
+    </section>
+
+    <!-- ============ PHILOSOPHY (dense columns + book) ============ -->
+    <section class="creed" id="creed">
+      <div class="creed__col creed__col--l reveal">
+        <p>“I admit that twice two makes four is an excellent thing, but if we are to
+        give everything its due, twice two makes five is sometimes a very charming
+        thing too. Man is sometimes extraordinarily, passionately, in love with
+        suffering, and that is a fact.</p>
+        <p>The whole work of man really seems to consist in nothing but proving to
+        himself every minute that he is a man and not a piano-key. And if reason and
+        science alone were to govern, man would deliberately go mad in order to be
+        rid of reason and have his own way.”</p>
+      </div>
+      <div class="creed__book" aria-hidden="true">
+        <span class="creed__book-spine">ЗАПИСКИ ИЗ ПОДПОЛЬЯ</span>
+      </div>
+      <div class="creed__col creed__col--r reveal">
+        <p>“What man wants is simply independent choice, whatever that independence may
+        cost and wherever it may lead. One's own free, unfettered choice, one's own
+        fancy, worked up at times to frenzy — that is the most advantageous advantage.</p>
+        <p>I say let the world go to hell, but I should always have my tea. The
+        consciousness of life is higher than life, the knowledge of the laws of
+        happiness higher than happiness — that is what one must fight against.”</p>
+      </div>
+    </section>
+
+    <!-- ============ WORKS GALLERY ============ -->
+    <section class="works" id="works">
+      <p class="works__kicker">[ 03 — THE GREAT NOVELS ]</p>
+      <div class="works__grid" id="worksGrid"></div>
+    </section>
+
+    <!-- ============ OUTRO ============ -->
+    <section class="outro" id="outro">
+      <canvas id="webgl2"></canvas>
+      <div class="outro__inner">
+        <blockquote class="outro__quote reveal-words">
+          “The mystery of human existence lies not in just staying alive,
+          but in finding something to live for.”
+        </blockquote>
+        <cite class="outro__cite">— THE BROTHERS KARAMAZOV, 1880</cite>
+        <p class="outro__dates">1821 &nbsp;—&nbsp; 1881</p>
+      </div>
+      <div class="outro__corners">
+        <span class="corner corner--bl">FREEDOM IS A BURDEN</span>
+        <span class="corner corner--br">LOVE ALL · JUDGE NONE</span>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="vendor/three.min.js"></script>
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/ScrollTrigger.min.js"></script>
+  <script src="vendor/lenis.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
