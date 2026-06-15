@@ -27,10 +27,12 @@
   <header class="nav" id="nav">
     <a href="#top" class="nav__brand">AEGIS<span>LAB</span><i>v1.0</i></a>
     <nav class="nav__links">
-      <a href="#platform">Platform</a>
+      <a href="#generations">Generations</a>
+      <a href="#aircraft">Aircraft</a>
       <a href="#anatomy">Anatomy</a>
       <a href="#sim">Simulator</a>
-      <a href="#guidance">Guidance</a>
+      <a href="#warzone">War Zone</a>
+      <a href="#missions">Missions</a>
     </nav>
     <a href="#sim" class="nav__cta">Launch Simulator</a>
   </header>
@@ -42,31 +44,47 @@
       <canvas id="heroGL"></canvas>
       <div class="hero__veil"></div>
       <div class="hero__inner">
-        <p class="kicker"><span class="dot"></span> INTERACTIVE · EDUCATIONAL · PHYSICS-DRIVEN</p>
-        <h1 class="hero__title">SEE HOW AN<br/><span>INTERCEPT</span><br/>ACTUALLY WORKS</h1>
+        <p class="kicker"><span class="dot"></span> THE OPEN ENCYCLOPEDIA OF AIR-COMBAT SYSTEMS</p>
+        <h1 class="hero__title">HOW MODERN<br/><span>AIR POWER</span><br/>ACTUALLY WORKS</h1>
         <p class="hero__sub">
-          Take apart an air-to-air missile, integrate the systems onto a Rafale,
-          then fly a real proportional-navigation intercept — and watch every
-          number that decides hit or miss.
+          From 4th-generation fighters to 6th-generation programmes — the airframes,
+          the sensors, the missiles and the guidance maths. Tear them apart, fly a
+          real intercept, and route a strike through a defended, mountainous theatre.
         </p>
         <div class="hero__cta">
           <a href="#sim" class="btn btn--primary" data-magnetic><span>Enter the lab</span></a>
           <a href="#anatomy" class="btn btn--ghost" data-magnetic><span>Tear it down</span></a>
         </div>
         <div class="hero__stats">
-          <div><b data-count="4">0</b><span>missile parts</span></div>
-          <div><b data-count="3">0</b><span>weapon presets</span></div>
-          <div><b>PN</b><span>guidance law</span></div>
-          <div><b>60</b><span>fps physics</span></div>
+          <div><b data-count="16">0</b><span>aircraft profiled</span></div>
+          <div><b data-count="4">0</b><span>generations</span></div>
+          <div><b data-count="100">0</b><span>mission scenarios</span></div>
+          <div><b>PN</b><span>guidance maths</span></div>
         </div>
       </div>
       <div class="hero__scroll">SCROLL TO EXPLORE</div>
     </section>
 
+    <!-- ============ GENERATIONS ============ -->
+    <section class="gens" id="generations">
+      <div class="sec-head">
+        <span class="sec-head__no">01</span>
+        <span class="sec-head__label">FOUR GENERATIONS OF FIGHTER</span>
+      </div>
+      <h2 class="sec-title reveal">From dogfighter to <em>system of systems</em>.</h2>
+      <p class="sec-lead reveal">Each leap is defined less by speed than by what the jet can
+        <em>see, hide, share and decide</em>. Pick a generation.</p>
+      <div class="gens__tabs" id="gensTabs"></div>
+      <div class="gens__body">
+        <div class="gens__panel" id="gensPanel"></div>
+        <div class="gens__bar" id="gensBar"></div>
+      </div>
+    </section>
+
     <!-- ============ PLATFORM ============ -->
     <section class="platform" id="platform">
       <div class="sec-head">
-        <span class="sec-head__no">01</span>
+        <span class="sec-head__no">02</span>
         <span class="sec-head__label">THE PLATFORM</span>
       </div>
       <h2 class="sec-title reveal">Dassault <em>Rafale</em> — the launch platform.</h2>
@@ -82,10 +100,31 @@
       </div>
     </section>
 
+    <!-- ============ AIRCRAFT DATABASE ============ -->
+    <section class="db" id="aircraft">
+      <div class="sec-head">
+        <span class="sec-head__no">03</span>
+        <span class="sec-head__label">THE AIRCRAFT CODEX</span>
+      </div>
+      <h2 class="sec-title reveal">Sixteen airframes, four generations.</h2>
+      <p class="sec-lead reveal">Stylised 3D, real public-domain figures. RCS values are open
+        estimates; 6th-gen numbers are projected. Filter, then select an airframe.</p>
+      <div class="db__filters" id="dbFilters"></div>
+      <div class="db__layout">
+        <div class="db__list" id="dbList"></div>
+        <div class="db__viewer">
+          <canvas id="dbGL"></canvas>
+          <div class="db__badge" id="dbBadge">GEN —</div>
+          <div class="db__name" id="dbName">—</div>
+        </div>
+        <div class="db__spec" id="dbSpec"></div>
+      </div>
+    </section>
+
     <!-- ============ ANATOMY ============ -->
     <section class="anatomy" id="anatomy">
       <div class="sec-head">
-        <span class="sec-head__no">02</span>
+        <span class="sec-head__no">04</span>
         <span class="sec-head__label">ANATOMY OF AN INTERCEPTOR</span>
       </div>
       <div class="anatomy__grid">
@@ -103,7 +142,7 @@
     <!-- ============ SIMULATOR ============ -->
     <section class="sim" id="sim">
       <div class="sec-head">
-        <span class="sec-head__no">03</span>
+        <span class="sec-head__no">05</span>
         <span class="sec-head__label">BUILD &amp; SIMULATE</span>
       </div>
       <div class="sim__wrap">
@@ -181,10 +220,74 @@
       </div>
     </section>
 
+    <!-- ============ WAR ZONE (gaussian terrain) ============ -->
+    <section class="warzone" id="warzone">
+      <div class="sec-head">
+        <span class="sec-head__no">06</span>
+        <span class="sec-head__label">WAR ZONE · TERRAIN &amp; THREATS</span>
+      </div>
+      <h2 class="sec-title reveal">Routing through <em>geography</em>.</h2>
+      <p class="sec-lead reveal">The terrain is a sum of Gaussian peaks; each SAM paints a
+        Gaussian threat dome. Watch the strike route adapt — fly high and direct, or
+        hug the valleys to mask from radar. The exposure number is a real line integral.</p>
+      <div class="wz__wrap">
+        <aside class="panel wz__panel">
+          <div class="panel__group">
+            <label class="panel__title">THEATRE</label>
+            <div class="seg" id="wzTheatre">
+              <button data-t="0" class="active">MOUNTAIN</button>
+              <button data-t="1">DESERT</button>
+              <button data-t="2">COASTAL</button>
+            </div>
+            <p class="panel__desc" id="wzDesc"></p>
+          </div>
+          <div class="panel__group">
+            <label class="panel__title">FLIGHT PROFILE</label>
+            <div class="seg seg--sm" id="wzProfile">
+              <button data-p="hi" class="active">HI · DIRECT</button>
+              <button data-p="lo">TERRAIN-FOLLOW</button>
+            </div>
+          </div>
+          <div class="wz__metrics">
+            <div><span>ROUTE EXPOSURE</span><b id="wzExp">—</b></div>
+            <div><span>PEAK DETECTION</span><b id="wzPk">—</b></div>
+            <div><span>AVG ALTITUDE</span><b id="wzAlt">—</b></div>
+            <div><span>SAM SITES</span><b id="wzSam">—</b></div>
+          </div>
+          <p class="wz__note">Exposure = Σ P<sub>detect</sub>(x) along the path. Lower is safer.
+            Terrain-following trades altitude for survivability — exactly how real strike
+            packages plan around defended geography.</p>
+        </aside>
+        <div class="viewport wz__view">
+          <canvas id="wzGL"></canvas>
+          <div class="wz__legend">
+            <span><i style="background:#33e1d6"></i>SAFE</span>
+            <span><i style="background:#ffb547"></i>TRACKED</span>
+            <span><i style="background:#ff5a52"></i>ENGAGED</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MISSIONS ============ -->
+    <section class="missions" id="missions">
+      <div class="sec-head">
+        <span class="sec-head__no">07</span>
+        <span class="sec-head__label">100 AIR MISSIONS</span>
+      </div>
+      <h2 class="sec-title reveal">A library of engagements.</h2>
+      <p class="sec-lead reveal">Real operations from the public record (flagged HISTORICAL)
+        alongside generated training scenarios (SCENARIO). Select one to load its parameters
+        into the simulator above.</p>
+      <div class="db__filters" id="msFilters"></div>
+      <div class="missions__grid" id="missionsGrid"></div>
+      <div class="missions__more"><button id="msMore" class="btn btn--ghost">LOAD MORE</button></div>
+    </section>
+
     <!-- ============ GUIDANCE ============ -->
     <section class="guidance" id="guidance">
       <div class="sec-head">
-        <span class="sec-head__no">04</span>
+        <span class="sec-head__no">08</span>
         <span class="sec-head__label">HOW THE GUIDANCE THINKS</span>
       </div>
       <div class="guidance__grid">
@@ -213,8 +316,12 @@
 
   <footer class="footer">
     <div class="footer__brand">AEGIS<span>LAB</span></div>
-    <p>An educational visualisation of guidance physics and missile architecture.
-       Models are stylised; all numbers are illustrative. Built with Three.js &amp; GSAP.</p>
+    <p>An open, educational visualisation of air-combat systems — generations, airframes,
+       missile architecture, proportional-navigation guidance, and Gaussian terrain/threat
+       routing. 3D models are stylised procedural geometry (not CAD); specifications are from
+       public sources and vary by variant; RCS values are open estimates and 6th-gen figures
+       are projected. Missions combine documented operations with generated training scenarios.
+       Built with Three.js &amp; GSAP.</p>
     <p class="footer__fine">© 2026 · FOR LEARNING — NOT AN OPERATIONAL TOOL</p>
   </footer>
 

@@ -15,6 +15,9 @@
   const RS = 0.02;                 // metres -> scene units (positions only)
   const MACH = 340;                // m/s
   const G = 9.80665;
+  let lenisRef = null;             // shared smooth-scroll handle
+  let simCtl = null;               // simulator scenario controller (set by wireUI)
+  function goTo(sel) { const el = document.querySelector(sel); if (!el) return; if (lenisRef) lenisRef.scrollTo(el, { offset: -10 }); else el.scrollIntoView({ behavior: "smooth" }); }
 
   /* ---------------------------------------------------------
      SCENE REGISTRY — render only what's on screen
@@ -734,6 +737,556 @@
       sim.setCam(b.dataset.cam);
     }));
     setWeapon(0);
+
+    // expose scenario loading for the missions library
+    simCtl = {
+      load(s) {
+        setWeapon(s.weapon ?? 0);
+        const set = (id, val) => { const r = $(id); r.value = val; r.dispatchEvent(new Event("input")); };
+        if (s.range != null) set("rRange", s.range);
+        if (s.tspd != null) set("rTspd", s.tspd);
+        if (s.tg != null) set("rTg", s.tg);
+        if (s.mg != null) set("rMg", s.mg);
+        if (s.aspect != null) set("rAspect", s.aspect);
+        if (s.N != null) set("rN", s.N);
+        applySliders(); _running = false; sim.reset();
+      },
+    };
+  }
+
+  /* ---------------------------------------------------------
+     GENERATIONS
+  --------------------------------------------------------- */
+  const GENS = [
+    { id: "4", name: "4th Generation", era: "1970s – 1990s", color: "g-4",
+      blurb: "Agile, relaxed-stability dogfighters with pulse-Doppler radar and beyond-visual-range missiles. The jet is a superb platform — but the pilot still fuses the picture by hand.",
+      traits: ["Relaxed stability + fly-by-wire", "Pulse-Doppler look-down/shoot-down radar", "Semi-active radar BVR missiles", "Little to no signature shaping"],
+      ex: "F-16 · F-15 · Su-27 · MiG-29",
+      bars: { Stealth: 12, Sensors: 45, Networking: 25, Supercruise: 10 } },
+    { id: "4.5", name: "4.5 Generation", era: "1990s – 2010s", color: "g-45",
+      blurb: "AESA radar, helmet sights, active-radar missiles and a glass cockpit. Modest signature reduction. The aircraft starts fusing sensors for the pilot rather than the other way round.",
+      traits: ["AESA radar + sensor fusion", "Active-radar fire-and-forget missiles (Meteor, AMRAAM)", "Helmet-mounted cueing", "Reduced — not stealth — signature"],
+      ex: "Rafale · Typhoon · Gripen E · Super Hornet · Su-35",
+      bars: { Stealth: 35, Sensors: 75, Networking: 60, Supercruise: 45 } },
+    { id: "5", name: "5th Generation", era: "2005 – present", color: "g-5",
+      blurb: "All-aspect stealth, internal weapons, and a fused sensor picture shared across the formation. The cockpit shows answers, not raw data. First-look, first-shot, first-kill.",
+      traits: ["All-aspect low observability", "Internal weapons carriage", "Full sensor fusion + datalink", "Supercruise (F-22) and EO/DAS spherical awareness"],
+      ex: "F-22 · F-35 · Su-57 · J-20",
+      bars: { Stealth: 92, Sensors: 92, Networking: 88, Supercruise: 70 } },
+    { id: "6", name: "6th Generation", era: "≈2030s (in development)", color: "g-6",
+      blurb: "Optionally-crewed penetrating platforms teamed with autonomous collaborative aircraft (loyal wingmen), adaptive-cycle engines and AI decision support. Programmes — figures are projected.",
+      traits: ["Manned-unmanned teaming (CCAs / loyal wingmen)", "Adaptive-cycle propulsion", "Broadband signature management", "AI-assisted decision support & directed energy"],
+      ex: "NGAD · GCAP / Tempest · FCAS",
+      bars: { Stealth: 98, Sensors: 98, Networking: 99, Supercruise: 85 } },
+  ];
+  function initGenerations() {
+    const tabs = document.getElementById("gensTabs");
+    const panel = document.getElementById("gensPanel");
+    const bar = document.getElementById("gensBar");
+    if (!tabs) return;
+    tabs.innerHTML = GENS.map((g, i) => `<button data-i="${i}"${i === 0 ? ' class="active"' : ""}>${g.name}</button>`).join("");
+    function show(i) {
+      const g = GENS[i];
+      [...tabs.children].forEach((b, k) => b.classList.toggle("active", k === i));
+      panel.innerHTML = `<div class="era">${g.era}</div><h3>${g.name}</h3><p>${g.blurb}</p>
+        <ul>${g.traits.map((t) => `<li>${t}</li>`).join("")}</ul>
+        <div class="ex">EXEMPLARS · ${g.ex}</div>`;
+      bar.innerHTML = Object.entries(g.bars).map(([k, v]) =>
+        `<div class="gbar"><span><i>${k}</i><i>${v}</i></span><div class="gbar__track"><div class="gbar__fill" data-v="${v}"></div></div></div>`).join("");
+      requestAnimationFrame(() => bar.querySelectorAll(".gbar__fill").forEach((f) => f.style.width = f.dataset.v + "%"));
+    }
+    [...tabs.children].forEach((b) => b.addEventListener("click", () => show(+b.dataset.i)));
+    show(0);
+  }
+
+  /* ---------------------------------------------------------
+     AIRCRAFT CODEX — data + parametric models
+  --------------------------------------------------------- */
+  const AIRCRAFT = [
+    { id: "f16", name: "F-16C Fighting Falcon", gen: "4", origin: "USA", year: "1978", role: "Lightweight multirole",
+      cfg: { family: "conv", len: 15, span: 10, color: 0x8a97a8, eng: 1, tail: "single", canard: false, hstab: true },
+      specs: { Length: "15.06 m", Wingspan: "9.96 m", "Max speed": "Mach 2.0", "Combat radius": "~550 km", Ceiling: "15,240 m", Engine: "1 × F110 (~129 kN)", "RCS (est.)": "~1.2 m²", Radar: "APG-83 AESA (V)", Armament: "AIM-120, AIM-9, JDAM", Crew: "1" },
+      blurb: "The benchmark 4th-gen lightweight fighter — relaxed stability, bubble canopy, and unmatched production scale across the world." },
+    { id: "f15", name: "F-15C Eagle", gen: "4", origin: "USA", year: "1976", role: "Air superiority",
+      cfg: { family: "conv", len: 19.4, span: 13, color: 0x9aa6b6, eng: 2, tail: "twin", canard: false, hstab: true },
+      specs: { Length: "19.43 m", Wingspan: "13.05 m", "Max speed": "Mach 2.5", "Combat radius": "~1,060 km", Ceiling: "20,000 m", Engine: "2 × F100 (~105 kN ea.)", "RCS (est.)": "large (~10 m²)", Radar: "APG-63/70", Armament: "AIM-120, AIM-7, AIM-9", Crew: "1" },
+      blurb: "Undefeated in air-to-air combat for decades — a big-wing, twin-engine interceptor built around the radar and the missile." },
+    { id: "su27", name: "Su-27 Flanker", gen: "4", origin: "USSR", year: "1985", role: "Air superiority",
+      cfg: { family: "conv", len: 21.9, span: 14.7, color: 0x808d9c, eng: 2, tail: "twin", canard: false, hstab: true },
+      specs: { Length: "21.9 m", Wingspan: "14.7 m", "Max speed": "Mach 2.35", "Combat radius": "~1,340 km", Ceiling: "18,500 m", Engine: "2 × AL-31F (122 kN ea.)", "RCS (est.)": "large (~12 m²)", Radar: "N001 Myech", Armament: "R-27, R-73", Crew: "1" },
+      blurb: "A long-range Soviet answer to the Eagle, famous for its blended lifting-body fuselage and the cobra manoeuvre." },
+    { id: "mig29", name: "MiG-29 Fulcrum", gen: "4", origin: "USSR", year: "1983", role: "Frontline fighter",
+      cfg: { family: "conv", len: 17.3, span: 11.4, color: 0x7e8a99, eng: 2, tail: "twin", canard: false, hstab: true },
+      specs: { Length: "17.32 m", Wingspan: "11.36 m", "Max speed": "Mach 2.25", "Combat radius": "~700 km", Ceiling: "18,000 m", Engine: "2 × RD-33 (81 kN ea.)", "RCS (est.)": "~5 m²", Radar: "N019", Armament: "R-27, R-73", Crew: "1" },
+      blurb: "Highly agile point-defence fighter; its helmet-cued R-73 stunned Western analysts in the 1990s." },
+
+    { id: "rafale", name: "Dassault Rafale", gen: "4.5", origin: "France", year: "2001", role: "Omnirole",
+      cfg: { family: "delta", len: 15.3, span: 10.8, color: 0x6c7a8a, eng: 2, tail: "single", canard: true, hstab: false },
+      specs: { Length: "15.27 m", Wingspan: "10.80 m", "Max speed": "Mach 1.8", "Combat radius": "~1,000 km", Ceiling: "15,235 m", Engine: "2 × M88 (75 kN ea.)", "RCS (est.)": "reduced (~1 m²)", Radar: "RBE2-AA AESA", Armament: "Meteor, MICA, SCALP", Crew: "1–2" },
+      blurb: "A delta-canard 'omnirole' fighter — air defence, strike, recce and nuclear strike from one airframe, with the SPECTRA EW suite." },
+    { id: "typhoon", name: "Eurofighter Typhoon", gen: "4.5", origin: "Europe", year: "2003", role: "Air dominance",
+      cfg: { family: "delta", len: 16, span: 11, color: 0x76838f, eng: 2, tail: "single", canard: true, hstab: false },
+      specs: { Length: "15.96 m", Wingspan: "10.95 m", "Max speed": "Mach 2.0", "Combat radius": "~1,390 km", Ceiling: "19,800 m", Engine: "2 × EJ200 (90 kN ea.)", "RCS (est.)": "reduced (~1 m²)", Radar: "Captor-E AESA", Armament: "Meteor, ASRAAM, AMRAAM", Crew: "1–2" },
+      blurb: "An unstable close-coupled delta-canard optimised for high-energy BVR combat and supersonic agility." },
+    { id: "gripen", name: "Saab JAS 39 Gripen E", gen: "4.5", origin: "Sweden", year: "2017", role: "Multirole",
+      cfg: { family: "delta", len: 15.2, span: 8.6, color: 0x83909d, eng: 1, tail: "single", canard: true, hstab: false },
+      specs: { Length: "15.2 m", Wingspan: "8.6 m", "Max speed": "Mach 2.0", "Combat radius": "~1,500 km", Ceiling: "16,000 m", Engine: "1 × F414 (98 kN)", "RCS (est.)": "low", Radar: "Raven ES-05 AESA", Armament: "Meteor, IRIS-T", Crew: "1" },
+      blurb: "Designed for dispersed road-base operations, rapid turnaround and a software-defined, network-centric cockpit." },
+    { id: "shornet", name: "F/A-18E Super Hornet", gen: "4.5", origin: "USA", year: "1999", role: "Carrier multirole",
+      cfg: { family: "conv", len: 18.3, span: 13.6, color: 0x8893a1, eng: 2, tail: "vtwin-cant", canard: false, hstab: true },
+      specs: { Length: "18.31 m", Wingspan: "13.62 m", "Max speed": "Mach 1.6", "Combat radius": "~720 km", Ceiling: "15,000 m", Engine: "2 × F414 (98 kN ea.)", "RCS (est.)": "reduced", Radar: "APG-79 AESA", Armament: "AIM-120, AIM-9X", Crew: "1–2" },
+      blurb: "The US Navy's carrier workhorse — canted tails, leading-edge extensions and a growler EW variant." },
+    { id: "su35", name: "Su-35S Flanker-E", gen: "4.5", origin: "Russia", year: "2014", role: "Air superiority",
+      cfg: { family: "conv", len: 21.9, span: 15.3, color: 0x77838f, eng: 2, tail: "twin", canard: false, hstab: true },
+      specs: { Length: "21.9 m", Wingspan: "15.3 m", "Max speed": "Mach 2.25", "Combat radius": "~1,600 km", Ceiling: "18,000 m", Engine: "2 × AL-41F1S (142 kN, TVC)", "RCS (est.)": "~1–3 m²", Radar: "Irbis-E PESA", Armament: "R-77, R-74, R-37M", Crew: "1" },
+      blurb: "A thrust-vectoring super-Flanker with huge fuel, long-range missiles and extreme post-stall agility." },
+    { id: "f15ex", name: "F-15EX Eagle II", gen: "4.5", origin: "USA", year: "2021", role: "Multirole / missile truck",
+      cfg: { family: "conv", len: 19.4, span: 13, color: 0x9aa6b6, eng: 2, tail: "twin", canard: false, hstab: true },
+      specs: { Length: "19.43 m", Wingspan: "13.05 m", "Max speed": "Mach 2.5", "Combat radius": "~1,500 km", Ceiling: "18,000 m", Engine: "2 × F110 (129 kN ea.)", "RCS (est.)": "large", Radar: "APG-82 AESA", Armament: "Up to 12 AAMs", Crew: "1–2" },
+      blurb: "A new-build digital Eagle carrying an enormous weapons load — the standoff 'missile truck' beside stealth fighters." },
+
+    { id: "f22", name: "F-22 Raptor", gen: "5", origin: "USA", year: "2005", role: "Air dominance (stealth)",
+      cfg: { family: "stealth", len: 18.9, span: 13.6, color: 0x59636f, eng: 2, tail: "vtwin-cant", canard: false, hstab: true },
+      specs: { Length: "18.92 m", Wingspan: "13.56 m", "Max speed": "Mach 2.25", Supercruise: "Mach 1.8", "Combat radius": "~850 km", Engine: "2 × F119 (156 kN, TVC)", "RCS (est.)": "~0.0001 m² (marble)", Radar: "APG-77 AESA", Armament: "AIM-120, AIM-9 (internal)", Crew: "1" },
+      blurb: "The first 5th-gen fighter: all-aspect stealth, supercruise and thrust-vectoring — designed to win before it is seen." },
+    { id: "f35", name: "F-35A Lightning II", gen: "5", origin: "USA", year: "2015", role: "Multirole (stealth)",
+      cfg: { family: "stealth", len: 15.7, span: 10.7, color: 0x5e6873, eng: 1, tail: "vtwin-cant", canard: false, hstab: true },
+      specs: { Length: "15.7 m", Wingspan: "10.7 m", "Max speed": "Mach 1.6", "Combat radius": "~1,135 km", Ceiling: "15,000 m", Engine: "1 × F135 (191 kN)", "RCS (est.)": "~0.005 m²", Radar: "APG-81 AESA + EOTS/DAS", Armament: "AIM-120, internal bombs", Crew: "1" },
+      blurb: "A networked sensor node as much as a fighter — its fused EO-DAS spherical picture and datalink define the modern force." },
+    { id: "su57", name: "Su-57 Felon", gen: "5", origin: "Russia", year: "2020", role: "Stealth multirole",
+      cfg: { family: "stealth", len: 20.1, span: 14.1, color: 0x5b656f, eng: 2, tail: "vtwin-cant", canard: false, hstab: true },
+      specs: { Length: "20.1 m", Wingspan: "14.1 m", "Max speed": "Mach 2.0", "Combat radius": "~1,500 km", Ceiling: "20,000 m", Engine: "2 × AL-41F1 / izd.30", "RCS (est.)": "~0.1–0.5 m²", Radar: "N036 Byelka AESA", Armament: "R-77M, R-74, internal", Crew: "1" },
+      blurb: "Russia's first stealth fighter — extreme agility with LEVCONs, distributed apertures and supersonic internal carriage." },
+    { id: "j20", name: "Chengdu J-20", gen: "5", origin: "China", year: "2017", role: "Stealth air superiority",
+      cfg: { family: "delta", len: 20.4, span: 13.5, color: 0x565f6a, eng: 2, tail: "vtwin-cant", canard: true, hstab: false },
+      specs: { Length: "20.4 m", Wingspan: "13.5 m", "Max speed": "Mach 2.0", "Combat radius": "~1,100 km", Ceiling: "20,000 m", Engine: "2 × WS-10C / WS-15", "RCS (est.)": "low (frontal)", Radar: "Type 1475 AESA", Armament: "PL-15, PL-10 (internal)", Crew: "1" },
+      blurb: "A long-range stealth interceptor with a canard-delta layout and large internal bays — built for the Pacific's distances." },
+
+    { id: "ngad", name: "NGAD (F-47 programme)", gen: "6", origin: "USA", year: "≈2030s", role: "Penetrating counter-air",
+      cfg: { family: "wing", len: 21, span: 16, color: 0x4a525c, eng: 2, tail: "none", canard: false, hstab: false },
+      specs: { Status: "In development", Configuration: "Tailless penetrating platform", Teaming: "Collaborative Combat Aircraft (CCA)", Propulsion: "Adaptive-cycle (NGAP)", Signature: "Broadband VLO (projected)", Sensors: "Multi-spectral fusion", Crew: "1 / optionally uncrewed" },
+      blurb: "A family-of-systems: a crewed penetrating aircraft directing autonomous loyal wingmen deep into contested airspace. Figures projected." },
+    { id: "gcap", name: "GCAP / Tempest", gen: "6", origin: "UK · Italy · Japan", year: "≈2035", role: "Stealth air dominance",
+      cfg: { family: "wing", len: 20, span: 15, color: 0x4d555f, eng: 2, tail: "none", canard: false, hstab: false },
+      specs: { Status: "In development", Configuration: "Large tailless delta", Teaming: "Uncrewed adjuncts", Propulsion: "Next-gen adaptive", Signature: "VLO (projected)", Sensors: "AI-assisted fusion, RF sensing", Crew: "1 / optional" },
+      blurb: "A trilateral 6th-gen programme merging the UK's Tempest and Japan's F-X — a large-range, deep-magazine air-dominance jet. Projected." },
+  ];
+
+  function buildAircraft(spec) {
+    const c = spec.cfg, g = new T.Group();
+    const L = c.len, span = c.span;
+    const skin = mat(c.color, { r: 0.45, m: 0.5 });
+    const dark = mat(0x2a323d, { r: 0.6, m: 0.4 });
+    const glass = mat(0x1a2a36, { r: 0.1, m: 0.8 });
+    const nozzle = mat(0x161c24, { r: 0.4, m: 0.7 });
+    const half = L * 0.5;
+    // fuselage
+    const fus = cyl(L * 0.058, L * 0.07, L * 0.8, skin, 22); g.add(fus);
+    const nose = new T.Mesh(new T.ConeGeometry(L * 0.058, L * 0.24, 20), skin);
+    nose.rotation.z = -Math.PI / 2; nose.position.x = half * 0.8 + L * 0.04; g.add(nose);
+    const canopy = new T.Mesh(new T.SphereGeometry(L * 0.055, 18, 14, 0, Math.PI * 2, 0, Math.PI / 2), glass);
+    canopy.scale.set(3.2, 1, 1.05); canopy.position.set(L * 0.2, L * 0.05, 0); g.add(canopy);
+
+    function pair(pts, opt) {
+      const sh = new T.Shape(); sh.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) sh.lineTo(pts[i][0], pts[i][1]);
+      const geo = new T.ExtrudeGeometry(sh, { depth: opt.th || L * 0.012, bevelEnabled: false });
+      [1, -1].forEach((s) => {
+        const m = new T.Mesh(geo, opt.m || skin);
+        m.rotation.x = -Math.PI / 2; m.scale.z = s;
+        m.position.set(opt.x || 0, opt.y || 0, 0); g.add(m);
+      });
+    }
+    // main wing per family
+    let wing;
+    if (c.family === "delta") wing = [[L * 0.16, 0], [-L * 0.30, 0], [-L * 0.30, span * 0.48], [L * 0.08, span * 0.12]];
+    else if (c.family === "stealth") wing = [[L * 0.14, 0], [-L * 0.26, 0], [-L * 0.30, span * 0.46], [L * 0.02, span * 0.16]];
+    else if (c.family === "wing") wing = [[L * 0.34, 0], [-L * 0.34, 0], [-L * 0.28, span * 0.5], [L * 0.04, span * 0.34], [L * 0.36, span * 0.05]];
+    else wing = [[L * 0.06, 0], [-L * 0.16, 0], [-L * 0.30, span * 0.4], [-L * 0.12, span * 0.44], [0, span * 0.1]];
+    pair(wing, { x: -L * 0.02, y: -L * 0.02 });
+
+    // canards
+    if (c.canard) pair([[L * 0.06, 0], [-L * 0.08, 0], [-L * 0.10, span * 0.17], [L * 0.04, span * 0.05]], { x: L * 0.27, y: 0.02 });
+    // horizontal stabilators
+    if (c.hstab) pair([[L * 0.04, 0], [-L * 0.12, 0], [-L * 0.18, span * 0.2], [-L * 0.04, span * 0.22]], { x: -L * 0.3, y: 0, m: dark });
+
+    // vertical tails
+    function fin(z, cant) {
+      const sh = new T.Shape(); sh.moveTo(0, 0); sh.lineTo(-L * 0.16, 0); sh.lineTo(-L * 0.15, L * 0.17); sh.lineTo(-L * 0.02, L * 0.03);
+      const geo = new T.ExtrudeGeometry(sh, { depth: L * 0.01, bevelEnabled: false });
+      const m = new T.Mesh(geo, skin);
+      m.position.set(-L * 0.26, L * 0.02, z);
+      if (cant) m.rotation.x = cant; g.add(m);
+    }
+    if (c.tail === "single") fin(0, 0);
+    else if (c.tail === "twin") { fin(span * 0.1, 0); fin(-span * 0.1, 0); }
+    else if (c.tail === "vtwin-cant") { fin(span * 0.09, -0.45); fin(-span * 0.09, 0.45); }
+
+    // engines / nozzles
+    const en = c.eng || 1;
+    for (let i = 0; i < en; i++) {
+      const z = en === 2 ? (i ? L * 0.05 : -L * 0.05) : 0;
+      const nz = new T.Mesh(new T.CylinderGeometry(L * 0.04, L * 0.05, L * 0.08, 16), nozzle);
+      nz.rotation.z = Math.PI / 2; nz.position.set(-half * 0.78, -L * 0.01, z); g.add(nz);
+    }
+    return g;
+  }
+
+  function aircraftDB() {
+    const canvas = document.getElementById("dbGL");
+    if (!canvas || !T) return;
+    const scene = new T.Scene(); scene.fog = new T.FogExp2(0x070b12, 0.01);
+    addSky(scene, 0x244a70, 0x0a1320);
+    const rim = new T.DirectionalLight(0x6fb1ff, 0.5); rim.position.set(-8, 4, -10); scene.add(rim);
+    const camera = new T.PerspectiveCamera(40, 1, 0.1, 400); camera.position.set(0, 6, 34);
+    const renderer = makeRenderer(canvas);
+    // soft floor
+    const floor = new T.Mesh(new T.CircleGeometry(40, 48), new T.MeshStandardMaterial({ color: 0x0a1018, roughness: 1, transparent: true, opacity: 0.7 }));
+    floor.rotation.x = -Math.PI / 2; floor.position.y = -6; scene.add(floor);
+    scene.add(new T.GridHelper(80, 40, 0x16343f, 0x0e2129));
+    scene.children[scene.children.length - 1].position.y = -5.98;
+
+    const fitAll = () => fit(renderer, camera, canvas); fitAll(); addEventListener("resize", fitAll);
+    let model = null;
+    const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+    addEventListener("pointermove", (e) => { mouse.tx = e.clientX / innerWidth - 0.5; mouse.ty = e.clientY / innerHeight - 0.5; }, { passive: true });
+
+    function setAircraft(spec) {
+      if (model) { scene.remove(model); model.traverse((o) => { if (o.isMesh) { o.geometry.dispose(); } }); }
+      model = buildAircraft(spec);
+      const s = 20 / spec.cfg.len;             // normalise visual size
+      model.scale.setScalar(s); scene.add(model);
+    }
+    let t = 0;
+    const r = register(canvas, {
+      setAircraft,
+      render(dt) {
+        t += dt;
+        mouse.x += (mouse.tx - mouse.x) * 0.04; mouse.y += (mouse.ty - mouse.y) * 0.04;
+        if (model) { model.rotation.y = t * 0.35 + mouse.x * 0.8; model.rotation.z = Math.sin(t * 0.5) * 0.05; model.position.y = Math.sin(t) * 0.4; }
+        camera.position.set(mouse.x * 6, 6 + mouse.y * -5, 34); camera.lookAt(0, 0, 0);
+        renderer.render(scene, camera);
+      },
+    });
+    return r;
+  }
+
+  function initAircraftDB(db) {
+    if (!db) return;
+    const filters = document.getElementById("dbFilters");
+    const list = document.getElementById("dbList");
+    const spec = document.getElementById("dbSpec");
+    const badge = document.getElementById("dbBadge");
+    const nameEl = document.getElementById("dbName");
+    const gens = ["ALL", "4", "4.5", "5", "6"];
+    filters.innerHTML = gens.map((g, i) => `<button data-g="${g}"${i === 0 ? ' class="active"' : ""}>${g === "ALL" ? "ALL" : "GEN " + g}</button>`).join("");
+    function gClass(g) { return g === "4" ? "g-4" : g === "4.5" ? "g-45" : g === "5" ? "g-5" : "g-6"; }
+    let filter = "ALL", activeId = null;
+    function renderList() {
+      const items = AIRCRAFT.filter((a) => filter === "ALL" || a.gen === filter);
+      list.innerHTML = items.map((a) => `<button class="dbcard${a.id === activeId ? " active" : ""}" data-id="${a.id}">
+        <b>${a.name}</b><span>${a.origin} · ${a.year}</span><span class="g ${gClass(a.gen)}">GEN ${a.gen}</span></button>`).join("");
+      list.querySelectorAll(".dbcard").forEach((b) => b.addEventListener("click", () => select(b.dataset.id)));
+    }
+    function select(id) {
+      const a = AIRCRAFT.find((x) => x.id === id); if (!a) return;
+      activeId = id;
+      list.querySelectorAll(".dbcard").forEach((b) => b.classList.toggle("active", b.dataset.id === id));
+      db.setAircraft(a);
+      badge.textContent = "GEN " + a.gen; badge.className = "db__badge"; nameEl.textContent = a.name;
+      spec.innerHTML = `<h4>${a.name}</h4><div class="role">${a.role} · ${a.origin}</div>` +
+        Object.entries(a.specs).map(([k, v]) => `<div class="specrow"><span>${k}</span><b>${v}</b></div>`).join("") +
+        `<p class="blurb">${a.blurb}</p><p class="est">RCS figures are open-source estimates and vary by aspect &amp; variant. 6th-gen data is projected.</p>`;
+    }
+    filters.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+      filter = b.dataset.g; filters.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b)); renderList();
+    }));
+    renderList(); select("rafale");
+  }
+
+  /* ---------------------------------------------------------
+     WAR ZONE — Gaussian terrain, radar domes, adaptive route
+  --------------------------------------------------------- */
+  const THEATRES = [
+    { name: "MOUNTAIN", base: 6, sea: -999,
+      desc: "Sharp ridgelines give superb terrain masking — fly the valleys and the radars never see you.",
+      peaks: [[-110, 40, 60, 34], [-30, -70, 78, 28], [50, 20, 66, 30], [120, -40, 54, 36], [10, 95, 58, 26], [-150, -20, 50, 40]],
+      sams: [[-60, -10, 80], [40, -30, 85], [120, 30, 75]] },
+    { name: "DESERT", base: 3, sea: -999,
+      desc: "Open, flat terrain — almost no masking. Exposure stays high whatever altitude you pick.",
+      peaks: [[-80, 30, 16, 80], [30, -40, 14, 90], [110, 40, 18, 70]],
+      sams: [[-90, 0, 95], [-10, 40, 90], [70, -30, 95], [140, 20, 85]] },
+    { name: "COASTAL", base: -8, sea: 0,
+      desc: "Sea to the west, rising land to the east — threats cluster on the coastline you must cross.",
+      peaks: [[60, 20, 52, 34], [120, -30, 46, 38], [150, 60, 40, 30]],
+      sams: [[20, -10, 90], [70, 40, 85], [130, 0, 80]] },
+  ];
+  function terrainH(x, z, th) {
+    let h = th.base;
+    if (th.name === "COASTAL") h = -8 + (x + 160) / 320 * 34;   // ramp west→east
+    for (const p of th.peaks) {
+      const dx = x - p[0], dz = z - p[1];
+      h += p[2] * Math.exp(-(dx * dx + dz * dz) / (2 * p[3] * p[3]));
+    }
+    return Math.max(h, th.sea > -900 ? th.sea : h);
+  }
+
+  function warZone() {
+    const canvas = document.getElementById("wzGL");
+    if (!canvas || !T) return;
+    const scene = new T.Scene(); scene.fog = new T.FogExp2(0x070b12, 0.0022);
+    addSky(scene, 0x223b58, 0x0a1018);
+    const sun = new T.DirectionalLight(0xffe9c8, 1.1); sun.position.set(-80, 120, 60); scene.add(sun);
+    const camera = new T.PerspectiveCamera(48, 1, 0.1, 1600); camera.position.set(0, 200, 300);
+    const renderer = makeRenderer(canvas);
+    const fitAll = () => fit(renderer, camera, canvas); fitAll(); addEventListener("resize", fitAll);
+
+    const SIZE = 360, SEG = 110;
+    const geo = new T.PlaneGeometry(SIZE, SIZE, SEG, SEG); geo.rotateX(-Math.PI / 2);
+    const colors = new Float32Array((SEG + 1) * (SEG + 1) * 3);
+    geo.setAttribute("color", new T.BufferAttribute(colors, 3));
+    const terrain = new T.Mesh(geo, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, flatShading: true }));
+    scene.add(terrain);
+    const water = new T.Mesh(new T.PlaneGeometry(SIZE, SIZE), new T.MeshStandardMaterial({ color: 0x0c2230, roughness: 0.3, metalness: 0.4, transparent: true, opacity: 0.85 }));
+    water.rotation.x = -Math.PI / 2; water.position.y = 0.2; water.visible = false; scene.add(water);
+
+    function colFor(h) {
+      if (h <= 0.3) return [0.05, 0.13, 0.18];
+      if (h < 14) return [0.16, 0.28, 0.16];
+      if (h < 38) return [0.34, 0.28, 0.16];
+      if (h < 60) return [0.4, 0.4, 0.42];
+      return [0.85, 0.88, 0.92];
+    }
+    const samGroup = new T.Group(); scene.add(samGroup);
+    const routeLine = new T.Line(new T.BufferGeometry(), new T.LineBasicMaterial({ vertexColors: true, linewidth: 2 }));
+    routeLine.frustumCulled = false; scene.add(routeLine);
+    const jet = buildAircraft(AIRCRAFT.find((a) => a.id === "f35")); jet.scale.setScalar(0.9); scene.add(jet);
+
+    let TH = THEATRES[0], profile = "hi", routePts = [], jetT = 0, metrics = {};
+
+    function detect(x, z, alt) {
+      let none = 1;
+      for (const s of TH.sams) {
+        const dx = x - s[0], dz = z - s[1], d = Math.hypot(dx, dz);
+        if (d > s[2] * 1.5) continue;
+        let p = Math.exp(-(d * d) / (s[2] * s[2]));                 // gaussian footprint
+        // terrain masking: sample line of sight site->aircraft
+        const siteTop = terrainH(s[0], s[1], TH) + 8;
+        let masked = false;
+        for (let f = 0.15; f < 0.95; f += 0.12) {
+          const sx = s[0] + dx * f, sz = s[1] + dz * f;
+          const sight = siteTop + (alt - siteTop) * f;
+          if (terrainH(sx, sz, TH) > sight + 2) { masked = true; break; }
+        }
+        if (masked) p *= 0.12;
+        none *= (1 - Math.min(1, p));
+      }
+      return 1 - none;
+    }
+
+    function buildRoute() {
+      routePts = [];
+      const N = 70; let exp = 0, peak = 0, altSum = 0;
+      let prevZ = 0;
+      for (let i = 0; i <= N; i++) {
+        const f = i / N, x = -160 + f * 320;
+        let z = 0, alt;
+        if (profile === "hi") { z = 0; alt = 95; }
+        else {
+          // search z that minimises detection (valley + threat avoidance), smoothed
+          let best = 1e9, bestZ = prevZ;
+          for (let zz = -70; zz <= 70; zz += 10) {
+            const a = terrainH(x, zz, TH) + 10;
+            const pen = detect(x, zz, a) + Math.abs(zz - prevZ) * 0.002;
+            if (pen < best) { best = pen; bestZ = zz; }
+          }
+          z = prevZ + (bestZ - prevZ) * 0.5; prevZ = z;
+          alt = terrainH(x, z, TH) + 10;
+        }
+        const p = detect(x, z, alt);
+        exp += p; peak = Math.max(peak, p); altSum += alt;
+        routePts.push({ x, y: alt, z, p });
+      }
+      metrics = { exp: exp, peak: peak, alt: altSum / (N + 1), sam: TH.sams.length };
+      // line geometry + colours
+      const pos = new Float32Array(routePts.length * 3), col = new Float32Array(routePts.length * 3);
+      routePts.forEach((pt, i) => {
+        pos[i * 3] = pt.x; pos[i * 3 + 1] = pt.y; pos[i * 3 + 2] = pt.z;
+        const c = pt.p < 0.25 ? [0.2, 0.88, 0.84] : pt.p < 0.6 ? [1, 0.71, 0.28] : [1, 0.35, 0.32];
+        col[i * 3] = c[0]; col[i * 3 + 1] = c[1]; col[i * 3 + 2] = c[2];
+      });
+      routeLine.geometry.dispose();
+      const rg = new T.BufferGeometry();
+      rg.setAttribute("position", new T.BufferAttribute(pos, 3));
+      rg.setAttribute("color", new T.BufferAttribute(col, 3));
+      routeLine.geometry = rg;
+      return metrics;
+    }
+
+    function rebuildTerrain() {
+      const pos = geo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), z = pos.getZ(i);
+        const h = terrainH(x, z, TH); pos.setY(i, h);
+        const c = colFor(h); colors[i * 3] = c[0]; colors[i * 3 + 1] = c[1]; colors[i * 3 + 2] = c[2];
+      }
+      pos.needsUpdate = true; geo.attributes.color.needsUpdate = true; geo.computeVertexNormals();
+      water.visible = TH.sea > -900;
+      // SAM domes
+      samGroup.clear();
+      TH.sams.forEach((s) => {
+        const dome = new T.Mesh(new T.SphereGeometry(s[2], 20, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+          new T.MeshBasicMaterial({ color: 0xff5a52, transparent: true, opacity: 0.08, depthWrite: false }));
+        dome.position.set(s[0], terrainH(s[0], s[1], TH), s[1]); samGroup.add(dome);
+        const ring = new T.Mesh(new T.RingGeometry(s[2] * 0.96, s[2], 48),
+          new T.MeshBasicMaterial({ color: 0xff5a52, transparent: true, opacity: 0.35, side: T.DoubleSide }));
+        ring.rotation.x = -Math.PI / 2; ring.position.set(s[0], terrainH(s[0], s[1], TH) + 0.5, s[1]); samGroup.add(ring);
+        const post = new T.Mesh(new T.ConeGeometry(3, 10, 8), new T.MeshStandardMaterial({ color: 0xff5a52 }));
+        post.position.set(s[0], terrainH(s[0], s[1], TH) + 5, s[1]); samGroup.add(post);
+      });
+    }
+
+    function refresh() { rebuildTerrain(); return buildRoute(); }
+
+    let camA = 0;
+    const r = register(canvas, {
+      setTheatre(i) { TH = THEATRES[i]; return refresh(); },
+      setProfile(p) { profile = p; return buildRoute(); },
+      getMetrics() { return metrics; },
+      render(dt) {
+        camA += dt * 0.05;
+        const rad = 250;
+        camera.position.set(Math.sin(camA) * rad, 165, Math.cos(camA) * rad);
+        camera.lookAt(0, 18, 0);
+        // fly jet along route
+        if (routePts.length) {
+          jetT += dt * 0.06; if (jetT > 1) jetT = 0;
+          const idx = jetT * (routePts.length - 1), i0 = Math.floor(idx), i1 = Math.min(routePts.length - 1, i0 + 1), fr = idx - i0;
+          const a = routePts[i0], b = routePts[i1];
+          jet.position.set(a.x + (b.x - a.x) * fr, a.y + (b.y - a.y) * fr + 3, a.z + (b.z - a.z) * fr);
+          const dir = new T.Vector3(b.x - a.x, b.y - a.y, b.z - a.z).normalize();
+          if (dir.lengthSq() > 0) orient(jet, dir);
+        }
+        renderer.render(scene, camera);
+      },
+    });
+    refresh();
+    return r;
+  }
+
+  function initWarZone(wz) {
+    if (!wz) return;
+    const desc = document.getElementById("wzDesc");
+    const fmt = (m) => {
+      document.getElementById("wzExp").textContent = (m.exp).toFixed(1);
+      document.getElementById("wzPk").textContent = Math.round(m.peak * 100) + "%";
+      document.getElementById("wzAlt").textContent = Math.round(m.alt * 30) + " m";
+      document.getElementById("wzSam").textContent = m.sam;
+    };
+    const tSeg = document.getElementById("wzTheatre"), pSeg = document.getElementById("wzProfile");
+    [...tSeg.children].forEach((b) => b.addEventListener("click", () => {
+      [...tSeg.children].forEach((x) => x.classList.toggle("active", x === b));
+      desc.textContent = THEATRES[+b.dataset.t].desc;
+      fmt(wz.setTheatre(+b.dataset.t));
+    }));
+    [...pSeg.children].forEach((b) => b.addEventListener("click", () => {
+      [...pSeg.children].forEach((x) => x.classList.toggle("active", x === b));
+      fmt(wz.setProfile(b.dataset.p));
+    }));
+    desc.textContent = THEATRES[0].desc;
+    fmt(wz.getMetrics());
+  }
+
+  /* ---------------------------------------------------------
+     MISSIONS — curated history + generated scenarios (100)
+  --------------------------------------------------------- */
+  const HIST = [
+    { year: "1967", name: "Operation Focus", theatre: "Sinai / Egypt", ac: "Mirage III, Mystère", desc: "Israel's pre-emptive strike destroyed the Egyptian air force on the ground in hours.", scen: { weapon: 0, aspect: 2, range: 8, tspd: 0.7, tg: 2 } },
+    { year: "1981", name: "Operation Opera", theatre: "Osirak, Iraq", ac: "F-16A, F-15A", desc: "Eight F-16s, escorted by F-15s, destroyed the Osirak reactor in a low-level strike.", scen: { weapon: 0, aspect: 0, range: 10, tspd: 0.8, tg: 3 } },
+    { year: "1982", name: "Mole Cricket 19", theatre: "Bekaa Valley", ac: "F-15, F-16, E-2C", desc: "A landmark SEAD operation: Syrian SAM batteries and ~80 aircraft destroyed for minimal loss.", scen: { weapon: 1, aspect: 1, range: 14, tspd: 0.9, tg: 5 } },
+    { year: "1982", name: "Operation Black Buck", theatre: "Falklands", ac: "Avro Vulcan", desc: "Ultra-long-range RAF bombing raids supported by a huge tanker chain.", scen: { weapon: 2, aspect: 2, range: 22, tspd: 0.6, tg: 1 } },
+    { year: "1986", name: "El Dorado Canyon", theatre: "Libya", ac: "F-111F, A-6E", desc: "US night precision strikes flown around denied airspace from the UK.", scen: { weapon: 0, aspect: 0, range: 12, tspd: 0.8, tg: 3 } },
+    { year: "1991", name: "Desert Storm — Night One", theatre: "Iraq", ac: "F-117, F-15E, F/A-18", desc: "Stealth and precision opened the air campaign against integrated air defences.", scen: { weapon: 1, aspect: 0, range: 16, tspd: 0.9, tg: 4 } },
+    { year: "1991", name: "Eagle Sweep", theatre: "Iraq", ac: "F-15C", desc: "USAF F-15s scored the majority of coalition air-to-air kills of the war.", scen: { weapon: 1, aspect: 0, range: 18, tspd: 1.0, tg: 6 } },
+    { year: "1995", name: "Deliberate Force", theatre: "Bosnia", ac: "F-16, F/A-18, Mirage 2000", desc: "NATO precision air campaign that helped end the Bosnian War.", scen: { weapon: 0, aspect: 1, range: 12, tspd: 0.85, tg: 4 } },
+    { year: "1999", name: "Allied Force", theatre: "Yugoslavia", ac: "F-15, F-16, F-117", desc: "78-day NATO air campaign; notable for the loss of an F-117 to an SA-3.", scen: { weapon: 1, aspect: 1, range: 15, tspd: 0.9, tg: 5 } },
+    { year: "2001", name: "Enduring Freedom", theatre: "Afghanistan", ac: "F-14, F/A-18, B-52", desc: "Carrier and bomber power projected over a landlocked theatre with persistent ISR.", scen: { weapon: 2, aspect: 2, range: 20, tspd: 0.7, tg: 2 } },
+    { year: "2003", name: "Iraqi Freedom", theatre: "Iraq", ac: "F-15E, F/A-18, Tornado", desc: "'Shock and awe' — massed precision strikes against command and air-defence nodes.", scen: { weapon: 1, aspect: 0, range: 16, tspd: 0.9, tg: 4 } },
+    { year: "2011", name: "Harmattan / Odyssey Dawn", theatre: "Libya", ac: "Rafale, Mirage 2000, Typhoon", desc: "Rafales flew the opening strikes enforcing the no-fly zone over Libya.", scen: { weapon: 0, aspect: 1, range: 13, tspd: 0.85, tg: 5 } },
+    { year: "2015", name: "Inherent Resolve", theatre: "Syria / Iraq", ac: "F-22, F-15E, Rafale", desc: "The F-22's combat debut, escorting and coordinating strikes against ISIS.", scen: { weapon: 1, aspect: 0, range: 17, tspd: 0.9, tg: 4 } },
+    { year: "2018", name: "Operation Hamilton", theatre: "Syria", ac: "Rafale, Tornado, B-1B", desc: "Coordinated stand-off cruise-missile strikes on chemical-weapons sites.", scen: { weapon: 2, aspect: 2, range: 24, tspd: 0.7, tg: 2 } },
+    { year: "2019", name: "Balakot Strike", theatre: "South Asia", ac: "Mirage 2000, Su-30MKI", desc: "Cross-border precision strike followed by a dramatic next-day air engagement.", scen: { weapon: 0, aspect: 0, range: 14, tspd: 0.95, tg: 6 } },
+    { year: "1973", name: "Operation Nickel Grass", theatre: "Yom Kippur War", ac: "F-4 Phantom, A-4", desc: "Intense air combat against a dense, modern Soviet-supplied SAM network.", scen: { weapon: 0, aspect: 1, range: 11, tspd: 0.85, tg: 5 } },
+    { year: "1988", name: "Bekaa II Patrols", theatre: "Lebanon", ac: "F-15, F-16", desc: "Sustained combat air patrols against contested airspace.", scen: { weapon: 1, aspect: 0, range: 16, tspd: 0.9, tg: 5 } },
+    { year: "2020", name: "Spring Shield", theatre: "Idlib, Syria", ac: "F-16, UCAV", desc: "Manned-unmanned strikes against armour and air defences.", scen: { weapon: 0, aspect: 1, range: 12, tspd: 0.8, tg: 4 } },
+  ];
+  const SCEN_AC = ["Rafale", "F-35A", "F-22", "Typhoon", "Su-57", "F-16C", "Gripen E", "F-15EX", "J-20", "Su-35"];
+  const SCEN_OBJ = ["DCA Sweep", "OCA Strike", "SEAD Push", "Maritime Strike", "Escort", "CAP Station", "Deep Interdiction", "QRA Intercept", "Fighter Sweep", "Strike Egress"];
+  const SCEN_TH = ["Mountain Corridor", "Desert Box", "Coastal Approach", "Polar Front", "Littoral Gap", "Highland Pass"];
+  function buildMissions() {
+    const all = HIST.map((h) => ({ ...h, kind: "H" }));
+    let seed = 7;
+    const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+    let n = all.length;
+    while (all.length < 100) {
+      const ac = SCEN_AC[Math.floor(rnd() * SCEN_AC.length)];
+      const obj = SCEN_OBJ[Math.floor(rnd() * SCEN_OBJ.length)];
+      const th = SCEN_TH[Math.floor(rnd() * SCEN_TH.length)];
+      const weapon = Math.floor(rnd() * 3), aspect = Math.floor(rnd() * 3);
+      const range = 6 + Math.floor(rnd() * 19), tspd = +(0.6 + rnd() * 0.9).toFixed(2), tg = Math.floor(rnd() * 9);
+      all.push({ year: "SIM", name: `${obj} ${String(++n).padStart(3, "0")}`, theatre: th, ac,
+        desc: `Training scenario — ${ac} flying a ${obj.toLowerCase()} against a Mach ${tspd}, ${tg}-G target.`,
+        kind: "S", scen: { weapon, aspect, range, tspd, tg } });
+    }
+    return all;
+  }
+  function initMissions() {
+    const grid = document.getElementById("missionsGrid");
+    const filters = document.getElementById("msFilters");
+    const moreBtn = document.getElementById("msMore");
+    if (!grid) return;
+    const all = buildMissions();
+    const fmtAspect = ["HEAD-ON", "CROSSING", "TAIL-CHASE"];
+    const wname = ["MICA-IR", "MICA-EM", "METEOR"];
+    filters.innerHTML = ["ALL", "HISTORICAL", "SCENARIO"].map((f, i) => `<button data-f="${f}"${i === 0 ? ' class="active"' : ""}>${f}</button>`).join("");
+    let filter = "ALL", shown = 0;
+    function list() { return all.filter((m) => filter === "ALL" || (filter === "HISTORICAL" ? m.kind === "H" : m.kind === "S")); }
+    function card(m) {
+      return `<button class="mcard" data-y="${m.year}">
+        <div class="mcard__top"><span class="mcard__year">${m.year}</span>
+          <span class="mcard__tag ${m.kind === "H" ? "tag-h" : "tag-s"}">${m.kind === "H" ? "HISTORICAL" : "SCENARIO"}</span></div>
+        <div class="mcard__name">${m.name}</div>
+        <div class="mcard__meta">${m.theatre} · ${m.ac}</div>
+        <div class="mcard__desc">${m.desc}</div>
+        <div class="mcard__load">▶ ${wname[m.scen.weapon]} · ${fmtAspect[m.scen.aspect]} · ${m.scen.range}km — LOAD ↗</div></button>`;
+    }
+    function render(reset) {
+      const items = list();
+      if (reset) { shown = 0; grid.innerHTML = ""; }
+      const next = items.slice(shown, shown + 24);
+      grid.insertAdjacentHTML("beforeend", next.map(card).join(""));
+      shown += next.length;
+      moreBtn.style.display = shown >= items.length ? "none" : "inline-flex";
+      // bind newly added
+      grid.querySelectorAll(".mcard:not([data-bound])").forEach((b, k) => {
+        b.setAttribute("data-bound", "1");
+      });
+      bind(items);
+    }
+    function bind(items) {
+      grid.querySelectorAll(".mcard").forEach((b, i) => {
+        b.onclick = () => {
+          const m = items[i]; if (!m || !simCtl) return;
+          simCtl.load(m.scen); goTo("#sim");
+        };
+      });
+    }
+    filters.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+      filter = b.dataset.f; filters.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+      render(true);
+    }));
+    moreBtn.addEventListener("click", () => render(false));
+    render(true);
   }
 
   /* ---------------------------------------------------------
@@ -742,6 +1295,7 @@
   function initLenis() {
     if (reduce || typeof Lenis === "undefined") return;
     const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+    lenisRef = lenis;
     lenis.on("scroll", () => window.ScrollTrigger && ScrollTrigger.update());
     gsap.ticker.add((t) => lenis.raf(t * 1000)); gsap.ticker.lagSmoothing(0);
     document.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener("click", (e) => {
@@ -792,11 +1346,17 @@
     if (!T) { document.getElementById("loader").style.display = "none"; return; }
     initLenis();
     heroScene();
+    initGenerations();
     platformScene();
+    const db = aircraftDB();
+    initAircraftDB(db);
     anatomyScene();
     const sim = simulator();
     guidanceDiagram();
     wireUI(sim);
+    const wz = warZone();
+    initWarZone(wz);
+    initMissions();
     initMagnetic();
     requestAnimationFrame(loop);
     boot();
