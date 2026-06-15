@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#070b12" />
+  <title>AEGIS LAB — Air-Defence Missile Systems, Visualised</title>
+  <meta name="description" content="An interactive, educational 3D visualisation of how an air-to-air missile system works — its parts, its guidance, and a real physics intercept simulation flown from a Rafale." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23070b12'/%3E%3Cpath d='M16 4 L20 16 L16 28 L12 16 Z' fill='%2333e1d6'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%2333e1d6' stroke-width='1.2' opacity='.5'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="scan" aria-hidden="true"></div>
+
+  <!-- loader -->
+  <div class="loader" id="loader">
+    <div class="loader__logo">AEGIS<span>LAB</span></div>
+    <div class="loader__bar"><span id="loaderBar"></span></div>
+    <div class="loader__status" id="loaderStatus">CALIBRATING SENSORS</div>
+  </div>
+
+  <!-- nav -->
+  <header class="nav" id="nav">
+    <a href="#top" class="nav__brand">AEGIS<span>LAB</span><i>v1.0</i></a>
+    <nav class="nav__links">
+      <a href="#platform">Platform</a>
+      <a href="#anatomy">Anatomy</a>
+      <a href="#sim">Simulator</a>
+      <a href="#guidance">Guidance</a>
+    </nav>
+    <a href="#sim" class="nav__cta">Launch Simulator</a>
+  </header>
+
+  <main id="top">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="hero">
+      <canvas id="heroGL"></canvas>
+      <div class="hero__veil"></div>
+      <div class="hero__inner">
+        <p class="kicker"><span class="dot"></span> INTERACTIVE · EDUCATIONAL · PHYSICS-DRIVEN</p>
+        <h1 class="hero__title">SEE HOW AN<br/><span>INTERCEPT</span><br/>ACTUALLY WORKS</h1>
+        <p class="hero__sub">
+          Take apart an air-to-air missile, integrate the systems onto a Rafale,
+          then fly a real proportional-navigation intercept — and watch every
+          number that decides hit or miss.
+        </p>
+        <div class="hero__cta">
+          <a href="#sim" class="btn btn--primary" data-magnetic><span>Enter the lab</span></a>
+          <a href="#anatomy" class="btn btn--ghost" data-magnetic><span>Tear it down</span></a>
+        </div>
+        <div class="hero__stats">
+          <div><b data-count="4">0</b><span>missile parts</span></div>
+          <div><b data-count="3">0</b><span>weapon presets</span></div>
+          <div><b>PN</b><span>guidance law</span></div>
+          <div><b>60</b><span>fps physics</span></div>
+        </div>
+      </div>
+      <div class="hero__scroll">SCROLL TO EXPLORE</div>
+    </section>
+
+    <!-- ============ PLATFORM ============ -->
+    <section class="platform" id="platform">
+      <div class="sec-head">
+        <span class="sec-head__no">01</span>
+        <span class="sec-head__label">THE PLATFORM</span>
+      </div>
+      <h2 class="sec-title reveal">Dassault <em>Rafale</em> — the launch platform.</h2>
+      <p class="sec-lead reveal">A twin-engine delta-canard multirole fighter. Here is where the
+        sensors live and where the interceptors hang. Hover a marker.</p>
+      <div class="platform__stage">
+        <canvas id="platformGL"></canvas>
+        <div class="hotspots" id="hotspots"></div>
+        <div class="platform__readout" id="platformReadout">
+          <h3>RBE2-AA AESA RADAR</h3>
+          <p>The active electronically-scanned array in the nose detects and tracks targets, then feeds the missile its initial picture before launch.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ANATOMY ============ -->
+    <section class="anatomy" id="anatomy">
+      <div class="sec-head">
+        <span class="sec-head__no">02</span>
+        <span class="sec-head__label">ANATOMY OF AN INTERCEPTOR</span>
+      </div>
+      <div class="anatomy__grid">
+        <div class="anatomy__viewer">
+          <canvas id="anatomyGL"></canvas>
+          <button class="anatomy__explode" id="explodeBtn">EXPLODE ▸</button>
+        </div>
+        <div class="anatomy__panel">
+          <h2 class="sec-title reveal">Five sections,<br/>one job: intercept.</h2>
+          <ul class="parts" id="partsList"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SIMULATOR ============ -->
+    <section class="sim" id="sim">
+      <div class="sec-head">
+        <span class="sec-head__no">03</span>
+        <span class="sec-head__label">BUILD &amp; SIMULATE</span>
+      </div>
+      <div class="sim__wrap">
+        <!-- control panel -->
+        <aside class="panel" id="panel">
+          <div class="panel__group">
+            <label class="panel__title">WEAPON</label>
+            <div class="seg" id="weaponSeg">
+              <button data-w="0" class="active">MICA-IR</button>
+              <button data-w="1">MICA-EM</button>
+              <button data-w="2">METEOR</button>
+            </div>
+            <p class="panel__desc" id="weaponDesc"></p>
+          </div>
+
+          <div class="panel__group">
+            <label class="panel__title">SEEKER</label>
+            <div class="seg seg--sm" id="seekerSeg">
+              <button data-s="ir" class="active">INFRARED</button>
+              <button data-s="radar">ACTIVE RADAR</button>
+            </div>
+          </div>
+
+          <div class="panel__group">
+            <div class="slider"><span>NAV CONSTANT (N)</span><b id="vN">4.0</b>
+              <input type="range" id="rN" min="2" max="6" step="0.5" value="4"></div>
+            <div class="slider"><span>TARGET RANGE</span><b id="vRange">12 km</b>
+              <input type="range" id="rRange" min="3" max="25" step="1" value="12"></div>
+            <div class="slider"><span>TARGET SPEED</span><b id="vTspd">M 0.90</b>
+              <input type="range" id="rTspd" min="0.5" max="1.6" step="0.05" value="0.9"></div>
+            <div class="slider"><span>TARGET MANEUVER</span><b id="vTg">5 G</b>
+              <input type="range" id="rTg" min="0" max="9" step="1" value="5"></div>
+            <div class="slider"><span>MISSILE MAX G</span><b id="vMg">40 G</b>
+              <input type="range" id="rMg" min="15" max="60" step="5" value="40"></div>
+            <div class="slider"><span>ASPECT</span><b id="vAspect">HEAD-ON</b>
+              <input type="range" id="rAspect" min="0" max="2" step="1" value="0"></div>
+          </div>
+
+          <div class="panel__actions">
+            <button class="btn btn--primary btn--full" id="launchBtn"><span>▶ LAUNCH</span></button>
+            <div class="panel__row">
+              <button class="btn btn--ghost" id="pauseBtn">❚❚ PAUSE</button>
+              <button class="btn btn--ghost" id="resetBtn">⟲ RESET</button>
+            </div>
+            <div class="seg seg--sm" id="camSeg">
+              <button data-cam="chase" class="active">CHASE</button>
+              <button data-cam="orbit">ORBIT</button>
+              <button data-cam="top">TOP</button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- viewport -->
+        <div class="viewport">
+          <canvas id="simGL"></canvas>
+          <div class="hud" id="hud">
+            <div class="hud__corner hud__corner--tl">
+              <span>RANGE</span><b id="hRange">— km</b>
+            </div>
+            <div class="hud__corner hud__corner--tr">
+              <span>PHASE</span><b id="hPhase">STANDBY</b>
+            </div>
+            <div class="hud__readouts" id="hReadouts">
+              <div><span>CLOSING V</span><b id="hVc">— m/s</b></div>
+              <div><span>MISSILE</span><b id="hMmach">M —</b></div>
+              <div><span>TARGET</span><b id="hTmach">M —</b></div>
+              <div><span>LATERAL</span><b id="hG">— G</b></div>
+              <div><span>LOS RATE</span><b id="hLos">—°/s</b></div>
+              <div><span>T+</span><b id="hTime">0.0 s</b></div>
+            </div>
+            <div class="hud__result" id="hResult"></div>
+            <div class="hud__reticle" id="hReticle"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ GUIDANCE ============ -->
+    <section class="guidance" id="guidance">
+      <div class="sec-head">
+        <span class="sec-head__no">04</span>
+        <span class="sec-head__label">HOW THE GUIDANCE THINKS</span>
+      </div>
+      <div class="guidance__grid">
+        <div class="guidance__text">
+          <h2 class="sec-title reveal">Proportional<br/>Navigation.</h2>
+          <p class="reveal">A guided missile does <em>not</em> chase the target's current position —
+            that loses every race. Instead it nulls the rotation of the line of sight.</p>
+          <p class="reveal">If the bearing to the target stops changing while the range shrinks,
+            the two are on a collision course. The missile commands lateral acceleration
+            proportional to how fast that line is still rotating:</p>
+          <p class="formula reveal">a&nbsp;=&nbsp;N · V<sub>c</sub> · λ̇</p>
+          <ul class="guidance__legend reveal">
+            <li><b>N</b> navigation constant (3–5)</li>
+            <li><b>V<sub>c</sub></b> closing velocity</li>
+            <li><b>λ̇</b> line-of-sight rotation rate</li>
+          </ul>
+        </div>
+        <div class="guidance__diagram">
+          <canvas id="diagramGL"></canvas>
+          <span class="guidance__cap">LOS rate → 0  =  collision course</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer__brand">AEGIS<span>LAB</span></div>
+    <p>An educational visualisation of guidance physics and missile architecture.
+       Models are stylised; all numbers are illustrative. Built with Three.js &amp; GSAP.</p>
+    <p class="footer__fine">© 2026 · FOR LEARNING — NOT AN OPERATIONAL TOOL</p>
+  </footer>
+
+  <script src="vendor/three.min.js"></script>
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/ScrollTrigger.min.js"></script>
+  <script src="vendor/Flip.min.js"></script>
+  <script src="vendor/lenis.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
