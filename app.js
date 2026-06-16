@@ -352,24 +352,29 @@
      WORKS GALLERY
   --------------------------------------------------------- */
   const WORKS = [
-    { year: "1864", title: "Notes from\nUnderground", line: "The first modern voice of the divided self." },
-    { year: "1866", title: "Crime and\nPunishment", line: "A murder, and the slow architecture of conscience." },
-    { year: "1869", title: "The Idiot", line: "A wholly good man loosed upon a corrupt world." },
-    { year: "1872", title: "Demons", line: "Ideology as possession; the politics of the abyss." },
-    { year: "1880", title: "The Brothers\nKaramazov", line: "Faith, doubt and patricide — his final testament." },
-    { year: "1867", title: "The Gambler", line: "Written against the clock, fevered with chance." },
+    { id: "underground", year: "1864", title: "Notes from\nUnderground", line: "The first modern voice of the divided self." },
+    { id: "cp", year: "1866", title: "Crime and\nPunishment", line: "A murder, and the slow architecture of conscience." },
+    { id: "idiot", year: "1869", title: "The Idiot", line: "A wholly good man loosed upon a corrupt world." },
+    { id: "demons", year: "1872", title: "Demons", line: "Ideology as possession; the politics of the abyss." },
+    { id: "bk", year: "1880", title: "The Brothers\nKaramazov", line: "Faith, doubt and patricide — his final testament." },
+    { id: "gambler", year: "1867", title: "The Gambler", line: "Written against the clock, fevered with chance." },
   ];
   function buildWorks() {
     const grid = document.getElementById("worksGrid");
     if (!grid) return;
     grid.innerHTML = WORKS.map((w) => `
-      <article class="work" data-reveal>
+      <article class="work" data-reveal data-book="${w.id}" tabindex="0" role="button" aria-label="Open ${w.title.replace(/\n/g, " ")} walkthrough">
+        <span class="work__open">OPEN WALKTHROUGH ↗</span>
         <span class="work__year">${w.year}</span>
         <div>
           <h3 class="work__title">${w.title.replace(/\n/g, "<br/>")}</h3>
           <p class="work__line">${w.line}</p>
         </div>
       </article>`).join("");
+    grid.querySelectorAll("[data-book]").forEach((el) => {
+      el.addEventListener("click", () => openBook(el.dataset.book));
+      el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openBook(el.dataset.book); } });
+    });
   }
 
   /* ---------------------------------------------------------
@@ -953,12 +958,289 @@
     render();
   }
 
+  /* ---------------------------------------------------------
+     BOOK WALKTHROUGHS — synopsis, philosophy, cast, graph, quotes
+     (content cross-checked against public references for accuracy)
+  --------------------------------------------------------- */
+  function illusSVG(key) {
+    const G = '#c8a24a', R = '#b3160f', C = '#ece4d2';
+    const s = `stroke="${G}" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+    if (key === "underground") return `<svg viewBox="0 0 200 200">
+      <path d="M40 180 V70 a60 60 0 0 1 120 0 V180" ${s}/>
+      <path d="M64 180 V86 a36 36 0 0 1 72 0 V180" ${s} opacity=".6"/>
+      <path d="M88 180 V104 a12 12 0 0 1 24 0 V180" ${s} opacity=".4"/>
+      <path d="M30 180 H170" ${s}/><circle cx="100" cy="150" r="3" fill="${R}"/></svg>`;
+    if (key === "axe") return `<svg viewBox="0 0 200 200">
+      <path d="M70 168 L120 60" ${s}/>
+      <path d="M112 44 q40 6 44 44 q-34 -6 -56 14 q-2 -38 12 -58z" ${s} fill="rgba(200,162,74,.08)"/>
+      <circle cx="60" cy="150" r="5" fill="${R}"/><circle cx="74" cy="158" r="3" fill="${R}" opacity=".6"/></svg>`;
+    if (key === "idiot") return `<svg viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="52" ${s}/>
+      <circle cx="100" cy="100" r="68" ${s} opacity=".4" stroke-dasharray="3 7"/>
+      <path d="M100 30 V170 M30 100 H170" ${s} opacity=".5"/>
+      <circle cx="100" cy="100" r="10" fill="${R}"/></svg>`;
+    if (key === "demons") {
+      let b = ""; for (let i = 0; i < 9; i++) { const x = 40 + (i * 37 % 130), y = 40 + (i * 53 % 120); b += `<path d="M${x} ${y} q8 -8 16 0 q8 -8 16 0" ${s} opacity="${0.4 + (i % 3) * 0.2}"/>`; }
+      return `<svg viewBox="0 0 200 200">${b}<circle cx="100" cy="120" r="4" fill="${R}"/></svg>`;
+    }
+    if (key === "cross") return `<svg viewBox="0 0 200 200">
+      <g ${s}><path d="M100 28 V176"/><path d="M70 60 H130"/><path d="M58 92 H142"/><path d="M78 140 L122 116"/></g>
+      <circle cx="100" cy="92" r="58" ${s} opacity=".25" stroke-dasharray="2 8"/>
+      <circle cx="100" cy="92" r="6" fill="${R}"/></svg>`;
+    // roulette
+    let spokes = ""; for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; spokes += `<line x1="100" y1="100" x2="${100 + Math.cos(a) * 60}" y2="${100 + Math.sin(a) * 60}" ${s} opacity=".5"/><circle cx="${100 + Math.cos(a) * 52}" cy="${100 + Math.sin(a) * 52}" r="4" fill="${i % 2 ? R : G}"/>`; }
+    return `<svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="64" ${s}/><circle cx="100" cy="100" r="40" ${s} opacity=".6"/>${spokes}<circle cx="100" cy="100" r="6" fill="${C}"/></svg>`;
+  }
+
+  const BOOKS = {
+    underground: { ru: "ЗАПИСКИ ИЗ ПОДПОЛЬЯ", title: "Notes from\nUnderground", year: "1864", archive: "Notes from Underground", illus: "underground",
+      tag: "“I am a sick man… I am a spiteful man.”",
+      walk: [
+        "Part One is the monologue of a nameless retired civil servant — the Underground Man — writing from a squalid room in St. Petersburg. Spiteful, brilliant and self-lacerating, he tears into the 'rational egoism' of his age: the faith that, shown their true interests, people will act reasonably.",
+        "He insists instead that a human being will choose suffering, caprice, even self-destruction, simply to prove he is free and not a 'piano-key' played by the laws of nature. Reason is only one faculty; the will is the whole man.",
+        "Part Two, 'Apropos of the Wet Snow', puts the theory in flesh: a humiliating dinner with old schoolfellows, and his cruel-then-tender-then-cruel treatment of the young prostitute Liza, whose offered love he cannot bear to accept.",
+      ],
+      phil: [
+        { h: "Against the Crystal Palace", p: "A direct satire of utopian rationalism: even in a perfectly rational society, man would smash it just to assert that he is free." },
+        { h: "Twice two makes five", p: "Freedom matters more than arithmetic. 'Two times two is four' is the death of will; man craves the right to want the irrational." },
+        { h: "Consciousness as illness", p: "To be hyper-aware is to be paralysed — able only to brood, never to act. Spite becomes the proof that one is still alive." },
+        { h: "The cruelty of ideals", p: "Liza shows that an abstract love of humanity collapses the moment a real, vulnerable person asks to be loved." },
+      ],
+      cast: [
+        { name: "The Underground Man", role: "Narrator", desc: "A nameless, bitter ex-official; brilliant, paralysed and at war with himself." },
+        { name: "Liza", role: "A young prostitute", desc: "Answers his contempt with genuine feeling; his inability to accept it is his deepest defeat." },
+        { name: "Zverkov", role: "Officer", desc: "A vain former schoolmate whose farewell dinner the narrator gate-crashes and ruins." },
+        { name: "Simonov", role: "Old schoolfellow", desc: "A reluctant acquaintance the narrator clings to and borrows money from." },
+        { name: "Apollon", role: "His servant", desc: "A silent, contemptuous presence with whom he wages domestic war." },
+      ],
+      rel: [[0, 1, "tenderness he destroys"], [0, 2, "envy & humiliation"], [0, 3, "borrowed money"], [0, 4, "domestic warfare"]] },
+
+    cp: { ru: "ПРЕСТУПЛЕНИЕ И НАКАЗАНИЕ", title: "Crime and\nPunishment", year: "1866", archive: "Crime and Punishment", illus: "axe",
+      tag: "Conscience is the slowest, surest punishment.",
+      walk: [
+        "Rodion Raskolnikov, a destitute ex-student in St. Petersburg, murders a rapacious pawnbroker — and, unplanned, her gentle sister Lizaveta — to test a theory: that 'extraordinary' men may step over moral law for a higher purpose.",
+        "The crime brings him no freedom, only fever, isolation and dread. The magistrate Porfiry Petrovich circles him not with evidence but with psychology, while Sonya — forced into prostitution to feed her family — becomes the one soul he can confess to.",
+        "His sister Dunya is pursued by the scoundrel Luzhin and the depraved, lucid Svidrigailov. In the end it is not logic but Sonya's faith and love that draw Raskolnikov toward confession and the long road of expiation in Siberia.",
+      ],
+      phil: [
+        { h: "The extraordinary-man theory", p: "Raskolnikov's article: a Napoleon may shed blood for history's sake. The novel dismantles the idea from the inside." },
+        { h: "Conscience over law", p: "The real punishment is not the sentence but the self; guilt works on him long before the police do." },
+        { h: "Redemption through suffering", p: "Salvation comes not by reason but by humbling oneself, confessing, and accepting suffering alongside Sonya." },
+        { h: "The double", p: "Svidrigailov is Raskolnikov's dark mirror — the same will to power, followed all the way to despair and suicide." },
+      ],
+      cast: [
+        { name: "Raskolnikov", role: "Ex-student", desc: "Proud, impoverished, intellectual; murders to prove a theory and is destroyed by it." },
+        { name: "Sonya", role: "His redeemer", desc: "Driven to prostitution by poverty yet luminous with faith; hears his confession and follows him to Siberia." },
+        { name: "Porfiry", role: "Magistrate", desc: "The investigator who plays a patient psychological game, certain of Raskolnikov's guilt." },
+        { name: "Dunya", role: "His sister", desc: "Strong and principled; courted by Luzhin and menaced by Svidrigailov." },
+        { name: "Razumikhin", role: "His friend", desc: "Warm, loyal and energetic; cares for Rodion and loves Dunya." },
+        { name: "Svidrigailov", role: "His dark double", desc: "A sensualist haunted by his crimes — the theory's nihilistic endpoint." },
+        { name: "Marmeladov", role: "Sonya's father", desc: "A ruined drunkard whose self-pity opens the novel's world of the poor." },
+      ],
+      rel: [[0, 1, "confession & love"], [0, 2, "cat & mouse"], [0, 3, "brother & sister"], [4, 3, "love"], [3, 5, "pursued by"], [1, 6, "daughter & father"], [0, 5, "dark mirror"], [0, 4, "friendship"]] },
+
+    idiot: { ru: "ИДИОТ", title: "The Idiot", year: "1869", archive: "The Idiot", illus: "idiot",
+      tag: "“Beauty will save the world.”",
+      walk: [
+        "Prince Lev Myshkin, an epileptic of childlike honesty, returns to Russia after years in a Swiss sanatorium. His radical innocence — Dostoevsky's attempt at a 'positively beautiful man' — both disarms and destabilises a society built on money, vanity and cruelty.",
+        "He is caught between two women: the proud, 'fallen' Nastasya Filippovna, whom he loves out of compassion, and the bright Aglaya, who loves him. The merchant Rogozhin loves Nastasya with a violent, possessive passion.",
+        "Goodness in a corrupt world cannot save it; it is consumed by it. The novel ends in catastrophe — Rogozhin murders Nastasya, and Myshkin's mind collapses back into 'idiocy'.",
+      ],
+      phil: [
+        { h: "Beauty will save the world", p: "Myshkin embodies the question: can compassion and beauty redeem a fallen world? The novel answers with anguish, not comfort." },
+        { h: "The Christlike man", p: "A flawed Christ figure — pure, truthful, socially 'an idiot' — destroyed by the very world he might heal." },
+        { h: "Compassion vs. passion", p: "Myshkin's pity for Nastasya collides with Rogozhin's devouring love and Aglaya's wounded pride." },
+        { h: "Holbein's Dead Christ", p: "A painting of Christ's corpse, so brutally human it 'could make a man lose his faith', haunts the novel's argument about belief." },
+      ],
+      cast: [
+        { name: "Prince Myshkin", role: "The 'idiot'", desc: "Epileptic, guileless, compassionate; a 'positively beautiful' soul among predators." },
+        { name: "Nastasya F.", role: "The wronged beauty", desc: "Proud and self-destructive, branded a 'fallen woman'; the object of pity and passion." },
+        { name: "Rogozhin", role: "Merchant's heir", desc: "Loves Nastasya with a dark, jealous violence that ends in murder." },
+        { name: "Aglaya", role: "General's daughter", desc: "Spirited and proud; loves Myshkin but cannot share him with his pity." },
+        { name: "Ganya", role: "Ambitious clerk", desc: "Torn between money and dignity in the scramble around Nastasya." },
+        { name: "Lebedyev", role: "A schemer", desc: "A buffoonish, scripture-quoting opportunist orbiting the drama." },
+      ],
+      rel: [[0, 1, "compassion"], [0, 3, "love"], [2, 1, "fatal passion"], [0, 2, "brothers & rivals"], [4, 1, "courted for money"], [3, 1, "rivals"]] },
+
+    demons: { ru: "БЕСЫ", title: "Demons", year: "1872", archive: "Demons", illus: "demons",
+      tag: "Ideas, untethered from God, possess men like demons.",
+      walk: [
+        "In a provincial town a cell of would-be revolutionaries gathers around two men: the magnetic, morally hollow aristocrat Nikolai Stavrogin, and the cynical agitator Pyotr Verkhovensky, who dreams of destruction as the road to power.",
+        "To bind the group in blood, Pyotr engineers the murder of Shatov — a former radical who has turned to Russian faith — and frames it as the suicide of Kirillov, an engineer obsessed with becoming 'man-god' by killing himself to prove his absolute freedom.",
+        "Modelled partly on a real political murder, the novel is Dostoevsky's prophecy of nihilism and ideological terror: ideas, cut loose from God and conscience, enter men like the demons of its Gospel epigraph and drive them — and their society — to ruin.",
+      ],
+      phil: [
+        { h: "Nihilism as possession", p: "The epigraph — the Gadarene swine — frames radical ideas as demons that enter and destroy their hosts and the body politic." },
+        { h: "If there is no God…", p: "Kirillov's logic: without God, man must become god, and prove it by willing his own death. Freedom curdles into self-annihilation." },
+        { h: "Shigalyovism", p: "A chilling parody of utopian politics: 'unlimited freedom' arriving, in practice, as unlimited despotism." },
+        { h: "The hollow centre", p: "Stavrogin can inspire faith, atheism, love and murder in others while believing nothing himself — charisma without a soul." },
+      ],
+      cast: [
+        { name: "Stavrogin", role: "The hollow idol", desc: "Beautiful, brilliant, morally empty; everyone projects their faith or nihilism onto him." },
+        { name: "Pyotr V.", role: "The agitator", desc: "A ruthless, manipulative revolutionary who orchestrates the conspiracy and the murder." },
+        { name: "Stepan V.", role: "The old liberal", desc: "Pyotr's father; a vain 1840s idealist whose ideas seeded his son's nihilism." },
+        { name: "Shatov", role: "The convert", desc: "A former radical turned to Russian Orthodoxy and 'the people'; murdered by the cell." },
+        { name: "Kirillov", role: "The engineer", desc: "Obsessed with suicide as the ultimate act of free will and man-godhood." },
+        { name: "Varvara P.", role: "Stavrogin's mother", desc: "Imperious patroness of Stepan and the social pivot of the town." },
+      ],
+      rel: [[1, 0, "wants as figurehead"], [1, 3, "murders"], [1, 4, "exploits suicide of"], [1, 2, "son & father"], [2, 5, "patron & dependent"], [0, 5, "mother & son"], [3, 4, "old companions"]] },
+
+    bk: { ru: "БРАТЬЯ КАРАМАЗОВЫ", title: "The Brothers\nKaramazov", year: "1880", archive: "The Brothers Karamazov", illus: "cross",
+      tag: "Faith, doubt, and a father's murder.",
+      walk: [
+        "The dissolute landowner Fyodor Pavlovich Karamazov and his sons embody warring parts of the Russian soul: sensual Dmitri, the atheist intellectual Ivan, the gentle novice Alyosha, and the resentful illegitimate servant Smerdyakov.",
+        "Father and eldest son clash over money and over Grushenka, while Dmitri's fiancée Katerina becomes entangled with Ivan. When Fyodor is murdered, Dmitri is accused — but it is Smerdyakov who killed him, acting on Ivan's idea that 'if there is no God, everything is permitted'.",
+        "Around the crime Dostoevsky builds his deepest argument about God, freedom and suffering — Ivan's 'Rebellion' and 'The Grand Inquisitor', answered by the elder Zosima's gospel of active love and universal responsibility.",
+      ],
+      phil: [
+        { h: "The Grand Inquisitor", p: "Ivan's poem: a returning Christ is arrested by the Church, which has 'corrected' his gift of freedom because men prefer miracle, mystery and authority — bread over liberty." },
+        { h: "If there is no God…", p: "Ivan's idea that without immortality 'everything is permitted' becomes the loaded gun that Smerdyakov fires." },
+        { h: "The suffering of children", p: "Ivan 'returns his ticket': no future harmony can justify the torture of a single innocent child — the hardest objection to faith in the book." },
+        { h: "Active love", p: "Zosima's answer: not abstract ideals but concrete, humbling love, and the conviction that each is 'responsible to all, for all'." },
+      ],
+      cast: [
+        { name: "Fyodor Pavlovich", role: "The father", desc: "A buffoonish, lecherous landowner whose murder drives the plot." },
+        { name: "Dmitri (Mitya)", role: "Eldest son", desc: "Passionate, impulsive, generous; rivals his father for Grushenka and is wrongly convicted." },
+        { name: "Ivan", role: "Middle son", desc: "Brilliant atheist; his ideas inspire the murder and then torment his conscience." },
+        { name: "Alyosha", role: "Youngest son", desc: "A novice monk and the novel's heart; disciple of the elder Zosima." },
+        { name: "Smerdyakov", role: "Illegitimate son / servant", desc: "Resentful and cunning; the actual murderer, who internalises Ivan's logic." },
+        { name: "Grushenka", role: "The contested woman", desc: "Loved by both Fyodor and Dmitri; proud, wounded, finally redemptive." },
+        { name: "Katerina", role: "Dmitri's fiancée", desc: "Noble and self-dramatising; bound to Dmitri yet drawn to Ivan." },
+        { name: "Zosima", role: "The elder", desc: "A dying monk whose teaching of active love answers Ivan's rebellion." },
+      ],
+      rel: [[0, 1, "father & rival"], [0, 4, "father & murderer"], [1, 5, "love"], [0, 5, "rivalry over"], [1, 6, "engaged"], [2, 6, "drawn together"], [2, 4, "idea & instrument"], [3, 7, "disciple & elder"], [2, 3, "doubt & faith"]] },
+
+    gambler: { ru: "ИГРОК", title: "The Gambler", year: "1867", archive: "The Gambler", illus: "roulette",
+      tag: "Addiction as a substitute for love and will.",
+      walk: [
+        "Dictated in a frantic 26 days to pay off Dostoevsky's own gambling debts, the novella follows Alexei Ivanovich, a tutor in the household of a ruined Russian General abroad, consumed by two passions: roulette and the General's haughty stepdaughter, Polina.",
+        "The family awaits the death of a rich grandmother — 'la Baboulinka' — only for her to arrive in person and gamble the inheritance away at the tables before their eyes, while Mademoiselle Blanche and the Frenchman des Grieux circle the General's money.",
+        "Alexei wins a fortune and loses Polina, and himself, to the spin of the wheel — a precise, autobiographical study of addiction as a substitute for love, will and meaning.",
+      ],
+      phil: [
+        { h: "Chance as a god", p: "The wheel offers the illusion of sudden destiny — a way to seize fate 'in a single hour' without patience or virtue." },
+        { h: "Addiction & will", p: "A clinical self-portrait: the gambler knows the odds are against him and plays anyway, mistaking compulsion for freedom." },
+        { h: "Love and humiliation", p: "Alexei's love for Polina is bound up with submission and humiliation — the same surrender the tables demand." },
+        { h: "The Russian abroad", p: "A satirical x-ray of Russians, French and Germans in the spa towns: money, manners and national character on display." },
+      ],
+      cast: [
+        { name: "Alexei", role: "Tutor / narrator", desc: "Proud and obsessive; in love first with Polina, then with the wheel." },
+        { name: "Polina", role: "The General's stepdaughter", desc: "Proud and enigmatic; Alexei's love and his torment." },
+        { name: "The General", role: "His employer", desc: "A vain, ruined man waiting on an inheritance and infatuated with Blanche." },
+        { name: "Grandmother", role: "The rich aunt ('Babulinka')", desc: "Arrives alive and gambles the awaited fortune away at roulette." },
+        { name: "Mlle Blanche", role: "Adventuress", desc: "A Frenchwoman pursuing the General's expected money." },
+        { name: "Mr. Astley", role: "English friend", desc: "A steady, decent Englishman who quietly loves Polina." },
+      ],
+      rel: [[0, 1, "love & torment"], [0, 5, "friendship"], [2, 4, "infatuation"], [2, 3, "awaited inheritance"], [1, 5, "quiet devotion"], [0, 2, "tutor & employer"]] },
+  };
+
+  function buildGraph(host, cast, rel) {
+    const NS = "http://www.w3.org/2000/svg";
+    const W = 600, H = 460, cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.36;
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const pos = cast.map((_, i) => {
+      const a = -Math.PI / 2 + (i / cast.length) * Math.PI * 2;
+      return { x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R };
+    });
+    const edges = [];
+    rel.forEach(([a, b, label]) => {
+      if (!pos[a] || !pos[b]) return;
+      const line = document.createElementNS(NS, "line");
+      line.setAttribute("x1", pos[a].x); line.setAttribute("y1", pos[a].y);
+      line.setAttribute("x2", pos[b].x); line.setAttribute("y2", pos[b].y);
+      line.setAttribute("class", "edge"); svg.appendChild(line);
+      const t = document.createElementNS(NS, "text");
+      t.setAttribute("x", (pos[a].x + pos[b].x) / 2); t.setAttribute("y", (pos[a].y + pos[b].y) / 2 - 4);
+      t.setAttribute("text-anchor", "middle"); t.setAttribute("class", "elabel"); t.textContent = label;
+      svg.appendChild(t);
+      edges.push({ a, b, line, t });
+    });
+    const nodes = cast.map((c, i) => {
+      const g = document.createElementNS(NS, "g"); g.setAttribute("class", "bm-node");
+      const circle = document.createElementNS(NS, "circle");
+      circle.setAttribute("cx", pos[i].x); circle.setAttribute("cy", pos[i].y); circle.setAttribute("r", 9);
+      const label = document.createElementNS(NS, "text");
+      const outward = pos[i].y < cy ? -16 : 22;
+      label.setAttribute("x", pos[i].x); label.setAttribute("y", pos[i].y + outward);
+      label.textContent = c.name;
+      g.appendChild(circle); g.appendChild(label); svg.appendChild(g);
+      const hot = () => {
+        nodes.forEach((n, k) => n.classList.toggle("dim", k !== i));
+        edges.forEach((e) => {
+          const on = e.a === i || e.b === i;
+          e.line.classList.toggle("hot", on); e.t.classList.toggle("hot", on);
+          if (on) { nodes[e.a].classList.remove("dim"); nodes[e.b].classList.remove("dim"); }
+        });
+        g.classList.add("hot");
+      };
+      const cool = () => {
+        nodes.forEach((n) => n.classList.remove("dim", "hot"));
+        edges.forEach((e) => { e.line.classList.remove("hot"); e.t.classList.remove("hot"); });
+      };
+      g.addEventListener("mouseenter", hot);
+      g.addEventListener("mouseleave", cool);
+      g.addEventListener("click", hot);
+      return g;
+    });
+    host.innerHTML = "";
+    host.appendChild(svg);
+    const hint = document.createElement("div");
+    hint.className = "bm-graph__hint"; hint.textContent = "HOVER A NAME TO TRACE THEIR BONDS";
+    host.appendChild(hint);
+  }
+
+  function openBook(id) {
+    const b = BOOKS[id]; if (!b) return;
+    const modal = document.getElementById("bookModal");
+    const body = document.getElementById("bookBody");
+    const quotes = ARCHIVE.filter((q) => q.w === b.archive).slice(0, 8);
+    body.innerHTML = `
+      <div class="bm-hero">
+        <div class="bm-hero__text">
+          <div class="bm-ru">${b.ru}</div>
+          <h2 class="bm-title">${b.title.replace(/\n/g, "<br/>")}</h2>
+          <div class="bm-year">FYODOR DOSTOEVSKY · ${b.year}</div>
+          <p class="bm-tag">${b.tag}</p>
+        </div>
+        <div class="bm-illus">${illusSVG(b.illus)}</div>
+      </div>
+      <div class="bm-sec bm-walk"><div class="bm-sec__h">THE WALKTHROUGH</div>${b.walk.map((p) => `<p>${p}</p>`).join("")}</div>
+      <div class="bm-sec"><div class="bm-sec__h">THE PHILOSOPHY</div>
+        <div class="bm-phil">${b.phil.map((x) => `<div><h4>${x.h}</h4><p>${x.p}</p></div>`).join("")}</div></div>
+      <div class="bm-sec"><div class="bm-sec__h">THE CAST</div>
+        <div class="bm-cast">${b.cast.map((c) => `<div class="bm-char"><b>${c.name}</b><span>${c.role}</span><p>${c.desc}</p></div>`).join("")}</div></div>
+      <div class="bm-sec"><div class="bm-sec__h">INTERACTIONS &amp; BONDS</div>
+        <div class="bm-graph" id="bmGraph"></div></div>
+      <div class="bm-sec"><div class="bm-sec__h">POPULAR QUOTES</div>
+        <div class="bm-quotes">${quotes.map((q) => `<div><blockquote>“${q.q}”</blockquote><cite>${q.who ? q.who + " · " : ""}${b.title.replace(/\n/g, " ")}</cite></div>`).join("")}</div></div>`;
+    buildGraph(document.getElementById("bmGraph"), b.cast, b.rel);
+    modal.scrollTop = 0;
+    modal.classList.add("open"); modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    if (lenis) lenis.stop();
+  }
+  function closeBook() {
+    const modal = document.getElementById("bookModal");
+    modal.classList.remove("open"); modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    if (lenis) lenis.start();
+  }
+  function initBooks() {
+    const back = document.getElementById("bookBack");
+    if (back) back.addEventListener("click", closeBook);
+    addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && document.getElementById("bookModal").classList.contains("open")) closeBook();
+    });
+  }
+
   let lifeTourScene = null;
   addEventListener("DOMContentLoaded", () => {
     initLenis();
     initCursor();
     drawPrisoners();
     buildWorks();
+    initBooks();
     buildQuotes();
     buildStations();
     initArchive();

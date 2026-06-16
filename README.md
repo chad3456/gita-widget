@@ -27,6 +27,10 @@ literary serif, a page-turning book, and 3D candlelight.
   the Semyonovsky scaffold, the Siberian palisade, a Petersburg tenement canyon, an
   Orthodox church with onion domes, and the final candle — each "room" cross-fading a
   **vintage sepia plate** and a chapter of his life as you scroll.
+- **Book Walkthroughs** — click any novel in the gallery to open a full-screen study:
+  a synopsis ("walkthrough"), its philosophy, a thematic illustration, an **interactive
+  character-relationship graph** (hover a name to trace their bonds), the full cast, and
+  that book's popular quotes. Content cross-checked against public references.
 - **The Quote Archive** — a searchable, source-checked concordance of ~50 quotations
   across his novels and tales. Live search (with highlighting), filter by book, and
   click any line to copy it. Attributions were cross-checked against public quote
