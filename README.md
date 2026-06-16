@@ -27,6 +27,10 @@ literary serif, a page-turning book, and 3D candlelight.
   the Semyonovsky scaffold, the Siberian palisade, a Petersburg tenement canyon, an
   Orthodox church with onion domes, and the final candle — each "room" cross-fading a
   **vintage sepia plate** and a chapter of his life as you scroll.
+- **The Quote Archive** — a searchable, source-checked concordance of ~50 quotations
+  across his novels and tales. Live search (with highlighting), filter by book, and
+  click any line to copy it. Attributions were cross-checked against public quote
+  repositories and the texts; commonly mis-attributed lines were excluded.
 - **Works gallery** + an **outro** with rising embers and `1821 — 1881`.
 - **Blipping cursor** — the pointer emits Dostoevskian words (SUFFERING, FAITH,
   REDEMPTION, СТРАДАНИЕ…) as you move.

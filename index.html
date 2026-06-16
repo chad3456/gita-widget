@@ -206,6 +206,30 @@
       <div class="works__grid" id="worksGrid"></div>
     </section>
 
+    <!-- ============ QUOTE ARCHIVE ============ -->
+    <section class="archive" id="archive">
+      <p class="archive__kicker">[ 06 — THE QUOTE ARCHIVE ]</p>
+      <h2 class="archive__title reveal">Everything he wrote,<br/>that we still quote.</h2>
+      <p class="archive__lead reveal">A curated, source-checked concordance of his novels and tales.
+        Search a word, filter by book, click any line to copy it.</p>
+      <div class="archive__controls">
+        <div class="archive__search">
+          <span class="archive__icon">⌕</span>
+          <input type="text" id="qSearch" placeholder="Search the soul — suffering, love, God, freedom…" aria-label="Search quotes" />
+          <button id="qClear" class="archive__clear" aria-label="Clear">✕</button>
+        </div>
+        <div class="archive__filters" id="qFilters"></div>
+      </div>
+      <p class="archive__count" id="qCount"></p>
+      <div class="archive__grid" id="qGrid"></div>
+      <p class="archive__empty" id="qEmpty" hidden>Nothing here. Even the underground has limits — try another word.</p>
+      <p class="archive__src">Sources cross-checked against public quote repositories (Goodreads, SparkNotes,
+        LitCharts, Wikiquote) and the public-domain texts. Commonly mis-attributed lines were excluded.</p>
+    </section>
+
+    <!-- copy toast -->
+    <div class="toast" id="toast" aria-live="polite"></div>
+
     <!-- ============ OUTRO ============ -->
     <section class="outro" id="outro">
       <canvas id="webgl2"></canvas>

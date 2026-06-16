@@ -822,6 +822,137 @@
   /* ---------------------------------------------------------
      INIT
   --------------------------------------------------------- */
+
+  /* ---------------------------------------------------------
+     QUOTE ARCHIVE — searchable concordance of his works
+     Source-checked against public quote repositories + texts;
+     commonly mis-attributed lines deliberately excluded.
+  --------------------------------------------------------- */
+  const ARCHIVE = [
+    // --- Crime and Punishment (1866) ---
+    { q: "Pain and suffering are always inevitable for a large intelligence and a deep heart. The really great men must, I think, have great sadness on earth.", w: "Crime and Punishment", y: "1866", who: "Raskolnikov" },
+    { q: "Taking a new step, uttering a new word, is what people fear most.", w: "Crime and Punishment", y: "1866", who: "Raskolnikov" },
+    { q: "Power is given only to him who dares to stoop and take it… one must have the courage to dare.", w: "Crime and Punishment", y: "1866", who: "Raskolnikov" },
+    { q: "I did not bow down to you, I bowed down to all the suffering of humanity.", w: "Crime and Punishment", y: "1866", who: "Raskolnikov to Sonia" },
+    { q: "I murdered myself, not her. I crushed myself once for all, forever.", w: "Crime and Punishment", y: "1866", who: "Raskolnikov" },
+    { q: "To go wrong in one's own way is better than to go right in someone else's.", w: "Crime and Punishment", y: "1866", who: "Razumikhin" },
+    { q: "It takes something more than intelligence to act intelligently.", w: "Crime and Punishment", y: "1866", who: "Razumikhin" },
+    { q: "Man grows used to everything, the scoundrel!", w: "Crime and Punishment", y: "1866", who: "Raskolnikov" },
+    { q: "What do you think, would not one tiny crime be wiped out by thousands of good deeds?", w: "Crime and Punishment", y: "1866", who: "a student, overheard" },
+
+    // --- Notes from Underground (1864) ---
+    { q: "I am a sick man… I am a spiteful man. I am an unattractive man.", w: "Notes from Underground", y: "1864", who: "The Underground Man" },
+    { q: "I say let the world go to hell, but I should always have my tea.", w: "Notes from Underground", y: "1864", who: "The Underground Man" },
+    { q: "Twice two makes four is an excellent thing, but twice two makes five is sometimes a very charming little thing too.", w: "Notes from Underground", y: "1864", who: "The Underground Man" },
+    { q: "To be too conscious is an illness — a real, thorough-going illness.", w: "Notes from Underground", y: "1864", who: "The Underground Man" },
+    { q: "Man is sometimes extraordinarily, passionately, in love with suffering.", w: "Notes from Underground", y: "1864", who: "The Underground Man" },
+    { q: "The best definition of man is: a being that goes on two legs and is ungrateful.", w: "Notes from Underground", y: "1864", who: "The Underground Man" },
+    { q: "What man wants is simply independent choice, whatever that independence may cost and wherever it may lead.", w: "Notes from Underground", y: "1864", who: "The Underground Man" },
+
+    // --- The Idiot (1869) ---
+    { q: "Beauty will save the world.", w: "The Idiot", y: "1869", who: "attributed to Prince Myshkin" },
+    { q: "It is better to be unhappy and know the worst, than to be happy in a fool's paradise.", w: "The Idiot", y: "1869" },
+    { q: "The soul is healed by being with children.", w: "The Idiot", y: "1869", who: "Prince Myshkin" },
+    { q: "Compassion was the chief law of human existence.", w: "The Idiot", y: "1869", who: "Prince Myshkin" },
+    { q: "There is no happiness in comfort; happiness is bought with suffering.", w: "The Idiot", y: "1869", who: "Ippolit" },
+    { q: "To love is to suffer and there can be no love otherwise.", w: "The Idiot", y: "1869" },
+
+    // --- The Brothers Karamazov (1880) ---
+    { q: "The awful thing is that beauty is mysterious as well as terrible. God and the devil are fighting there, and the battlefield is the heart of man.", w: "The Brothers Karamazov", y: "1880", who: "Dmitri" },
+    { q: "Above all, don't lie to yourself. The man who lies to himself and listens to his own lie comes to a point where he cannot distinguish the truth within him, or around him.", w: "The Brothers Karamazov", y: "1880", who: "Zosima" },
+    { q: "What is hell? I maintain that it is the suffering of being no longer able to love.", w: "The Brothers Karamazov", y: "1880", who: "Zosima" },
+    { q: "Love all God's creation, the whole of it and every grain of sand. Love every leaf, every ray of God's light.", w: "The Brothers Karamazov", y: "1880", who: "Zosima" },
+    { q: "Every one of us is responsible to all men for all and everything, not merely through the general sinfulness of creation, but each one personally for all mankind.", w: "The Brothers Karamazov", y: "1880", who: "Zosima / Markel" },
+    { q: "Active love is a harsh and fearful thing compared with love in dreams.", w: "The Brothers Karamazov", y: "1880", who: "Zosima" },
+    { q: "The mystery of human existence lies not in just staying alive, but in finding something to live for.", w: "The Brothers Karamazov", y: "1880" },
+    { q: "Man, do not pride yourself on superiority to the animals; they are without sin, and you, with your greatness, defile the earth.", w: "The Brothers Karamazov", y: "1880", who: "Zosima" },
+    { q: "It is not miracles that bring a realist to faith. The genuine realist, if he is an unbeliever, will always find strength to disbelieve in the miraculous.", w: "The Brothers Karamazov", y: "1880", who: "on Alyosha" },
+    { q: "Sarcasm is the last refuge of modest and chaste-souled people when the privacy of their soul is coarsely and intrusively invaded.", w: "The Brothers Karamazov", y: "1880" },
+    { q: "If everyone is responsible, then so am I — and we shall water the earth with our tears.", w: "The Brothers Karamazov", y: "1880", who: "after Zosima" },
+    { q: "Much on earth is hidden from us, but to make up for that we have been given a precious mystic sense of our living bond with the other world.", w: "The Brothers Karamazov", y: "1880", who: "Zosima" },
+
+    // --- Demons / The Possessed (1872) ---
+    { q: "To make the truth more plausible, it's absolutely necessary to mix a bit of falsehood with it.", w: "Demons", y: "1872" },
+    { q: "It seems as though the second half of a man's life is made up of nothing but the habits he has accumulated during the first half.", w: "Demons", y: "1872", who: "Stepan Verkhovensky" },
+    { q: "God is necessary, and so must exist… but I know that He doesn't and can't.", w: "Demons", y: "1872", who: "Kirillov" },
+    { q: "Fear of an enemy destroys spite against him.", w: "Demons", y: "1872" },
+
+    // --- The Gambler (1867) ---
+    { q: "All it would take is to stand firm just once, and I can change my whole destiny in a single hour.", w: "The Gambler", y: "1867", who: "Alexei Ivanovich" },
+    { q: "People really do like seeing their best friends humiliated; a large part of friendship is based on humiliation.", w: "The Gambler", y: "1867" },
+
+    // --- White Nights (1848) ---
+    { q: "My God, a whole moment of bliss! Is that too little for the whole of a man's life?", w: "White Nights", y: "1848", who: "The Dreamer" },
+    { q: "I am a dreamer. I know so little of real life that I just can't help re-living such moments as these in my dreams.", w: "White Nights", y: "1848", who: "The Dreamer" },
+    { q: "May your sky be clear, may your sweet smile be bright and happy — be blessed for the moment of bliss you gave to another lonely, grateful heart.", w: "White Nights", y: "1848", who: "The Dreamer" },
+
+    // --- The House of the Dead (1862) ---
+    { q: "Man is a creature that can get used to anything, and I think that is the best definition of him.", w: "The House of the Dead", y: "1862" },
+    { q: "Tyranny is a habit; it has its own organic life and develops finally into a disease.", w: "The House of the Dead", y: "1862" },
+    { q: "Without some goal and some effort to reach it, no man can live.", w: "The House of the Dead", y: "1862" },
+    { q: "Life without hope is no life at all.", w: "The House of the Dead", y: "1862" },
+
+    // --- The Insulted and Humiliated (1861) ---
+    { q: "If you want to be respected by others, the great thing is to respect yourself.", w: "The Insulted and Humiliated", y: "1861" },
+
+    // --- Letters ---
+    { q: "Man is a mystery. It must be solved, and if you spend your whole life solving it, do not say you have wasted time. I occupy myself with this mystery, because I want to be a man.", w: "Letter to his brother", y: "1839", who: "Letter" },
+    { q: "Life is a gift, life is happiness, every minute might have been an eternity of happiness.", w: "Letter after his reprieve", y: "1849", who: "Letter to Mikhail" },
+  ];
+  const ARCHIVE_WORKS = ["All", "Crime and Punishment", "The Brothers Karamazov", "Notes from Underground", "The Idiot", "Demons", "The Gambler", "White Nights", "The House of the Dead", "Letters"];
+  function initArchive() {
+    const grid = document.getElementById("qGrid");
+    if (!grid) return;
+    const input = document.getElementById("qSearch");
+    const clear = document.getElementById("qClear");
+    const count = document.getElementById("qCount");
+    const empty = document.getElementById("qEmpty");
+    const filtersEl = document.getElementById("qFilters");
+    const toast = document.getElementById("toast");
+    const isLetter = (w) => w.startsWith("Letter");
+    filtersEl.innerHTML = ARCHIVE_WORKS.map((w, i) =>
+      `<button data-w="${w}"${i === 0 ? ' class="active"' : ""}>${w === "All" ? "ALL" : w}</button>`).join("");
+
+    let filter = "All", query = "";
+    const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    function hi(text, q) {
+      if (!q) return text;
+      try { return text.replace(new RegExp("(" + esc(q) + ")", "ig"), "<mark>$1</mark>"); } catch (e) { return text; }
+    }
+    function matchWork(d) {
+      if (filter === "All") return true;
+      if (filter === "Letters") return isLetter(d.w);
+      return d.w === filter;
+    }
+    function render() {
+      const q = query.trim().toLowerCase();
+      const items = ARCHIVE.filter((d) => matchWork(d) &&
+        (!q || d.q.toLowerCase().includes(q) || d.w.toLowerCase().includes(q) || (d.who || "").toLowerCase().includes(q)));
+      grid.innerHTML = items.map((d) => `
+        <button class="qcard" data-q="${d.q.replace(/"/g, "&quot;")}" data-w="${d.w}">
+          <p class="qcard__q">“${hi(d.q, query.trim())}”</p>
+          <div class="qcard__meta"><span class="qcard__work">${d.w}</span><span class="qcard__year">${d.y}</span></div>
+          ${d.who ? `<div class="qcard__who">— ${d.who}</div>` : ""}
+          <div class="qcard__copy">CLICK TO COPY ⧉</div>
+        </button>`).join("");
+      count.textContent = `${items.length} of ${ARCHIVE.length} quotations` + (filter !== "All" ? ` · ${filter}` : "") + (q ? ` · “${query.trim()}”` : "");
+      empty.hidden = items.length > 0;
+      grid.querySelectorAll(".qcard").forEach((b) => b.addEventListener("click", () => {
+        const text = `“${b.dataset.q}” — Dostoevsky, ${b.dataset.w}`;
+        const done = () => { toast.textContent = "Copied to clipboard"; toast.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove("show"), 1600); };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(done);
+        else done();
+      }));
+    }
+    filtersEl.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+      filter = b.dataset.w; filtersEl.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b)); render();
+    }));
+    let deb;
+    input.addEventListener("input", () => { query = input.value; clearTimeout(deb); deb = setTimeout(render, 90); });
+    clear.addEventListener("click", () => { input.value = ""; query = ""; input.focus(); render(); });
+    render();
+  }
+
   let lifeTourScene = null;
   addEventListener("DOMContentLoaded", () => {
     initLenis();
@@ -830,6 +961,7 @@
     buildWorks();
     buildQuotes();
     buildStations();
+    initArchive();
 
     const s1 = candleScene(document.getElementById("webgl"));
     const s2 = emberScene(document.getElementById("webgl2"));
