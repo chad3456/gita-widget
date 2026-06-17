@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#070a12" />
+  <title>ISOCHRONE — A Travel-Time Atlas</title>
+  <meta name="description" content="An isochronic map: pick a city and see how far you can travel in a given time by air, rail, road and foot — real door-to-door estimates, rendered as luminous time-contours." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Space+Grotesk:wght@400;500;600&family=Space+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23070a12'/%3E%3Ccircle cx='16' cy='16' r='4' fill='none' stroke='%23ffd166' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23e5547c' stroke-width='1.2'/%3E%3Ccircle cx='16' cy='16' r='13.5' fill='none' stroke='%236d3bd6' stroke-width='1'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <canvas id="map"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- loader -->
+  <div class="loader" id="loader">
+    <div class="loader__rings"><span></span><span></span><span></span></div>
+    <div class="loader__txt">PLOTTING THE WORLD…</div>
+  </div>
+
+  <!-- tooltip -->
+  <div class="tip" id="tip" hidden></div>
+
+  <!-- control panel -->
+  <aside class="panel" id="panel">
+    <header class="panel__head">
+      <h1>ISO<span>CHRONE</span></h1>
+      <p class="panel__tag">A travel-time atlas — how far is far, really?</p>
+    </header>
+
+    <div class="ctrl">
+      <label class="ctrl__label">DEPARTURE CITY</label>
+      <div class="ctrl__search">
+        <input id="cityInput" type="text" placeholder="Search a city…" autocomplete="off" />
+        <div class="ctrl__results" id="cityResults" hidden></div>
+      </div>
+      <div class="origin" id="originInfo"></div>
+    </div>
+
+    <div class="ctrl">
+      <label class="ctrl__label">MODES OF TRAVEL</label>
+      <div class="modes" id="modes">
+        <button class="mode active" data-m="air"><i>✈</i> Air</button>
+        <button class="mode active" data-m="rail"><i>🚄</i> Rail</button>
+        <button class="mode active" data-m="drive"><i>🚗</i> Drive</button>
+        <button class="mode active" data-m="walk"><i>🚶</i> Walk</button>
+      </div>
+    </div>
+
+    <div class="ctrl">
+      <label class="ctrl__label">REACH BY 24H · OF EARTH'S CITIES</label>
+      <div class="stat" id="reachStat">—</div>
+    </div>
+
+    <div class="ctrl ctrl--row">
+      <label class="chk"><input type="checkbox" id="tgAirports" /> <span>Airports</span></label>
+      <label class="chk"><input type="checkbox" id="tgGrid" checked /> <span>Graticule</span></label>
+      <button class="link" id="methodBtn">Methodology ↗</button>
+    </div>
+  </aside>
+
+  <!-- legend -->
+  <div class="legend" id="legend">
+    <div class="legend__title">DOOR-TO-DOOR TRAVEL TIME</div>
+    <div class="legend__bands" id="legendBands"></div>
+  </div>
+
+  <!-- methodology modal -->
+  <div class="modal" id="methodModal" hidden>
+    <div class="modal__card">
+      <button class="modal__x" id="methodClose">✕</button>
+      <h2>How this map is built</h2>
+      <p>Every point on Earth is coloured by an estimate of the <b>door-to-door travel time</b>
+        from your chosen city — the fastest of four modes:</p>
+      <ul>
+        <li><b>✈ Air</b> — time to your city's main airport (researched per city) + a security/boarding
+          buffer (≈2&nbsp;h international, 1.4&nbsp;h domestic) + the great-circle flight at ~820&nbsp;km/h
+          effective (incl. taxi, climb and descent) + a distance-based connection penalty + the drive
+          from the arrival airport to the destination.</li>
+        <li><b>🚄 Rail</b> — ~210&nbsp;km/h inside real high-speed-rail regions (Europe, East Asia),
+          ~110&nbsp;km/h on conventional lines elsewhere. Land routes only.</li>
+        <li><b>🚗 Drive</b> — ~85&nbsp;km/h effective with a 1.25× road-detour factor. Land routes only.</li>
+        <li><b>🚶 Walk</b> — 4.8&nbsp;km/h (it only ever wins next door).</li>
+      </ul>
+      <p>Ground modes are blocked across open water using a land mask, so the sea is crossed by air.
+        The map uses an <b>azimuthal-equidistant projection centred on your city</b> — the classic
+        isochronic layout, where straight-line distance from the centre is true.</p>
+      <h3>Real data</h3>
+      <p><b>504 large international airports</b> with real coordinates (OurAirports, via the
+        <code>airports</code> dataset). World geometry from <code>world-atlas</code> (Natural Earth).
+        Airport-access times and HSR regions are researched approximations.</p>
+      <p class="modal__fine">This is a transparent <i>model</i>, not a routing engine — figures are
+        realistic estimates for exploration, not itineraries. Built with D3 (geo + contour).</p>
+    </div>
+  </div>
+
+  <script src="vendor/d3.min.js"></script>
+  <script src="vendor/topojson-client.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
