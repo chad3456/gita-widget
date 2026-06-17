@@ -16,6 +16,12 @@ interactive.
 - **Hover anywhere** for the estimated time to that exact point, the country, and the
   winning itinerary (e.g. *access → fly LHR→JFK → arrive 25 km drive*).
 - A live stat: **share of world cities reachable within 24 h** from your city.
+- **Open-infrastructure layers** over the same globe (toggleable, same naming/style):
+  **🛢 oil & gas pipelines** (20 major world systems — Druzhba, Nord Stream, Power of Siberia,
+  Keystone, Baku–Tbilisi–Ceyhan, West–East, TANAP/TAP, TAPI…), **🛰 submarine cables**
+  (MAREA, FASTER, SEA-ME-WE, 2Africa…), and **⚓ the world's busiest ports**.
+- **☁ Live weather** for the chosen city via the free, keyless **Open-Meteo** API
+  (graceful offline fallback).
 
 ## The model (transparent, researched — see the in-app Methodology)
 
@@ -40,6 +46,11 @@ a city recomputes the whole field in well under a frame.
   `airports` npm dataset.
 - **World geometry** (land + country borders) — Natural Earth, via `world-atlas`.
 - Airport-access times and HSR-region boxes are researched approximations.
+- **Pipelines** — 20 major systems routed from real waypoints after OpenStreetMap and the
+  Global Energy Monitor infrastructure trackers (`data/infra.js`).
+- **Submarine cables** — indicative routes in the style of TeleGeography's Submarine Cable Map.
+- **Ports** — busiest container ports by throughput (UNCTAD / Lloyd's List), real coordinates.
+- **Weather** — Open-Meteo open API (no key, CORS-enabled), live current conditions.
 
 > This is a transparent **model for exploration**, not a routing engine — figures are
 > realistic estimates, not bookable itineraries. No live APIs; all data is bundled.

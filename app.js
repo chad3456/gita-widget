@@ -66,6 +66,15 @@
   let origin = null, originAp = null;
   const modes = { air: true, rail: true, drive: true, walk: true };
   let showAirports = false, showGrid = true, animating = false;
+  const INFRA = window.INFRA || { pipelines: [], cables: [], ports: [] };
+  const layers = { pipelines: true, cables: false, ports: true };
+  const PIPE_OIL = "#ff7a45", PIPE_GAS = "#3ad1c0", CABLE = "#7ac8ff", PORT = "#ffd166";
+  const WCODE = { 0:["☀","Clear"],1:["🌤","Mainly clear"],2:["⛅","Partly cloudy"],3:["☁","Overcast"],
+    45:["🌫","Fog"],48:["🌫","Rime fog"],51:["🌦","Drizzle"],53:["🌦","Drizzle"],55:["🌦","Drizzle"],
+    56:["🌧","Freezing drizzle"],57:["🌧","Freezing drizzle"],61:["🌧","Rain"],63:["🌧","Rain"],65:["🌧","Heavy rain"],
+    66:["🌧","Freezing rain"],67:["🌧","Freezing rain"],71:["🌨","Snow"],73:["🌨","Snow"],75:["❄","Heavy snow"],
+    77:["❄","Snow grains"],80:["🌦","Showers"],81:["🌦","Showers"],82:["⛈","Violent showers"],
+    85:["🌨","Snow showers"],86:["🌨","Snow showers"],95:["⛈","Thunderstorm"],96:["⛈","Thunderstorm"],99:["⛈","Thunderstorm"] };
 
   const canvas = document.getElementById("map");
   const ctx = canvas.getContext("2d");
@@ -264,6 +273,8 @@
     ctx.beginPath(); path(LAND); ctx.strokeStyle = "rgba(180,200,240,.22)"; ctx.lineWidth = 0.7; ctx.stroke();
     if (BORDERS) { ctx.beginPath(); path(BORDERS); ctx.strokeStyle = "rgba(140,160,200,.10)"; ctx.lineWidth = 0.5; ctx.stroke(); }
 
+    drawInfra();
+
     // airports
     if (showAirports) {
       ctx.fillStyle = "rgba(255,255,255,.5)";
@@ -282,6 +293,40 @@
       star(o[0], o[1], 5, 7, 3.2); ctx.fill(); ctx.stroke();
     }
     ctx.restore();
+  }
+
+  function drawInfra() {
+    ctx.lineJoin = "round"; ctx.lineCap = "round";
+    // submarine cables
+    if (layers.cables) {
+      ctx.save(); ctx.setLineDash([2, 5]); ctx.strokeStyle = "rgba(122,200,255,.7)"; ctx.lineWidth = 1.1;
+      for (const c of INFRA.cables) { ctx.beginPath(); path({ type: "LineString", coordinates: c.c }); ctx.stroke(); }
+      ctx.restore();
+    }
+    // pipelines (glow underlay + line; dashed if planned)
+    if (layers.pipelines) {
+      for (const p of INFRA.pipelines) {
+        const col = p.t === "oil" ? PIPE_OIL : PIPE_GAS;
+        const geom = { type: "LineString", coordinates: p.c };
+        ctx.save();
+        ctx.globalAlpha = 0.22; ctx.strokeStyle = col; ctx.lineWidth = 4.5;
+        ctx.beginPath(); path(geom); ctx.stroke();
+        ctx.globalAlpha = 1; ctx.lineWidth = 1.7;
+        if (p.s === "planned") ctx.setLineDash([5, 5]);
+        ctx.beginPath(); path(geom); ctx.stroke();
+        ctx.restore();
+      }
+    }
+    // major ports (diamonds)
+    if (layers.ports) {
+      for (const pt of INFRA.ports) {
+        const q = project(pt.x, pt.y); if (!q) continue;
+        ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(Math.PI / 4);
+        ctx.fillStyle = PORT; ctx.strokeStyle = "rgba(7,10,18,.9)"; ctx.lineWidth = 1;
+        ctx.fillRect(-2.6, -2.6, 5.2, 5.2); ctx.strokeRect(-2.6, -2.6, 5.2, 5.2);
+        ctx.restore();
+      }
+    }
   }
 
   function drawBand(b) {
@@ -315,6 +360,7 @@
     originAp = AIRPORTS.find(a => a.i === city.iata) || AIRPORTS[nearestAirport(city.lat, city.lon)];
     document.getElementById("originInfo").innerHTML =
       `<b>${city.name}</b>, ${city.country}<br/>✈ ${originAp.i} · ${city.access} min to airport<br/>${city.lat.toFixed(2)}°, ${city.lon.toFixed(2)}°`;
+    fetchWeather(city);
     computeField();
     if (animate) animateTo(); else { fitProjection(); render(); }
   }
@@ -375,6 +421,24 @@
     const el = document.getElementById("legendBands");
     el.innerHTML = BANDS.map(h => `<div class="legend__row"><span class="legend__sw" style="background:${COLORS[h]}"></span>${BAND_LABEL[h]}</div>`).join("")
       + `<div class="legend__row"><span class="legend__sw" style="background:#0e1421;border:1px solid rgba(180,200,240,.2)"></span>beyond 48 h</div>`;
+    document.getElementById("legendInfra").innerHTML =
+      `<div class="legend__row"><span class="legend__sw" style="background:${PIPE_OIL}"></span>oil pipeline</div>`
+      + `<div class="legend__row"><span class="legend__sw" style="background:${PIPE_GAS}"></span>gas pipeline</div>`
+      + `<div class="legend__row"><span class="legend__sw" style="background:repeating-linear-gradient(90deg,${CABLE} 0 3px,transparent 3px 6px)"></span>subsea cable</div>`
+      + `<div class="legend__row"><span class="legend__sw" style="width:11px;height:11px;transform:rotate(45deg);background:${PORT}"></span>major port</div>`;
+  }
+  function fetchWeather(city) {
+    const el = document.getElementById("weather");
+    el.className = "weather off"; el.textContent = "◴ fetching weather…";
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh`;
+    const req = city.name;
+    fetch(url).then(r => r.json()).then(d => {
+      if (!origin || origin.name !== req) return;
+      const c = d.current, w = WCODE[c.weather_code] || ["•", "—"];
+      el.className = "weather";
+      el.innerHTML = `<span class="weather__ico">${w[0]}</span><div><div class="weather__t">${Math.round(c.temperature_2m)}°C</div>` +
+        `<div class="weather__m">${w[1]} · <i>wind</i> ${Math.round(c.wind_speed_10m)} km/h</div></div>`;
+    }).catch(() => { if (origin && origin.name === req) { el.className = "weather off"; el.textContent = "☁ live weather unavailable offline"; } });
   }
 
   function buildCitySearch() {
@@ -402,9 +466,12 @@
   }
 
   function buildModes() {
-    document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll("#modes .mode").forEach(b => b.addEventListener("click", () => {
       const m = b.dataset.m; modes[m] = !modes[m]; b.classList.toggle("active", modes[m]);
       computeField(); render();
+    }));
+    document.querySelectorAll("#layers .mode").forEach(b => b.addEventListener("click", () => {
+      const l = b.dataset.l; layers[l] = !layers[l]; b.classList.toggle("active", layers[l]); render();
     }));
     document.getElementById("tgAirports").addEventListener("change", e => { showAirports = e.target.checked; render(); });
     document.getElementById("tgGrid").addEventListener("change", e => { showGrid = e.target.checked; render(); });
