@@ -36,6 +36,13 @@ literary serif, a page-turning book, and 3D candlelight.
   click any line to copy it. Attributions were cross-checked against public quote
   repositories and the texts; commonly mis-attributed lines were excluded.
 - **Works gallery** + an **outro** with rising embers and `1821 — 1881`.
+- **Dostoevsky's Slambook** — a deliberately clashing **Y2K / high-school scrapbook**
+  page: gel-pen fonts, WordArt, lined paper, sketchy doodles and stickers, filled in
+  as "Fedya" from his real biography (with a couple of knowing anachronistic gags).
+  Includes a **"Class of Y-Combinator" yearbook** — flip-cards of ~26 **real** YC-backed
+  companies, each given a Dostoevskian verdict. (The full 5,000+ YC directory can't be
+  scraped in this sandbox — outbound network is blocked — so it's a hand-picked, clearly
+  labelled sample of genuine YC alumni, not invented startups.)
 - **Blipping cursor** — the pointer emits Dostoevskian words (SUFFERING, FAITH,
   REDEMPTION, СТРАДАНИЕ…) as you move.
 

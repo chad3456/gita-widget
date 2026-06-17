@@ -522,6 +522,76 @@ section{position:relative;}
 .bm-quotes cite{display:block;font-family:var(--cond);font-size:11px;letter-spacing:.08em;color:#85795f;margin-top:8px;font-style:normal;}
 
 /* =========================================================
+   DOSTOEVSKY'S SLAMBOOK (Y2K)  — deliberately clashes :)
+   ========================================================= */
+.slam{position:relative;overflow:hidden;padding:clamp(50px,8vh,90px) clamp(16px,4vw,48px) clamp(70px,10vh,110px);
+  background:
+    repeating-linear-gradient(45deg,#ff8de0 0 18px,#ffa6e8 18px 36px),
+    linear-gradient(135deg,#a8f0ff,#c9b6ff 45%,#ffd1f0);
+  color:#241046;font-family:"Gloria Hallelujah","Comic Sans MS",cursive;text-align:center;}
+.slam *{box-sizing:border-box;}
+.slam__tape{position:absolute;width:140px;height:34px;background:rgba(255,255,170,.6);
+  border:1px dashed rgba(0,0,0,.2);}
+.slam__tape--1{top:18px;left:-30px;transform:rotate(-28deg);}
+.slam__tape--2{bottom:24px;right:-30px;transform:rotate(-28deg);}
+.slam__eyebrow{font-family:"Permanent Marker",cursive;letter-spacing:.08em;color:#d6006e;font-size:13px;transform:rotate(-2deg);}
+.slam__wordart{font-family:"Bangers","Impact",cursive;font-size:clamp(44px,10vw,108px);line-height:.95;letter-spacing:.02em;
+  margin:8px 0;color:#fff;
+  text-shadow:3px 3px 0 #ff3db4, 6px 6px 0 #7b2ff7, 9px 9px 0 #00d0ff;
+  -webkit-text-stroke:2px #241046;}
+.slam__wordart span{display:inline-block;color:#ffe600;-webkit-text-stroke:2px #241046;animation:spin 4s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.slam__sub{font-family:"Permanent Marker",cursive;color:#5a1e9e;font-size:clamp(12px,1.6vw,16px);margin-bottom:30px;}
+.slam__page{position:relative;max-width:1100px;margin:0 auto;background:#fffdf5;
+  background-image:linear-gradient(#bfe3ff 1px,transparent 1px);background-size:100% 30px;
+  border:3px solid #241046;border-radius:8px;box-shadow:10px 10px 0 rgba(36,16,70,.4);
+  padding:clamp(22px,4vw,46px);}
+.slam__page::before{content:"";position:absolute;top:0;bottom:0;left:46px;width:2px;background:#ff7bba;opacity:.7;}
+.slam__fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;position:relative;z-index:2;}
+.field{background:#fff;border:2px solid #241046;border-radius:6px;padding:14px 16px;text-align:left;
+  box-shadow:3px 3px 0 rgba(36,16,70,.25);}
+.field:nth-child(3n){transform:rotate(-1.4deg);background:#fff7cc;}
+.field:nth-child(3n+1){transform:rotate(1deg);background:#e6fff0;}
+.field:nth-child(4n){background:#ffe9f6;}
+.field b{display:block;font-family:"Permanent Marker",cursive;color:#d6006e;font-size:13px;letter-spacing:.02em;}
+.field span{font-family:"Gloria Hallelujah",cursive;color:#241046;font-size:15px;line-height:1.4;}
+.field .heart{color:#ff3db4;}
+.slam__doodles{position:absolute;inset:0;pointer-events:none;z-index:3;}
+.slam__doodle{position:absolute;animation:wiggle 2.5s ease-in-out infinite;}
+@keyframes wiggle{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+
+.slam__sign{margin:30px auto 0;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center;
+  font-family:"Permanent Marker",cursive;color:#5a1e9e;font-size:16px;}
+.slam__btn{font-family:"Permanent Marker",cursive;font-size:15px;cursor:pointer;color:#241046;
+  background:linear-gradient(#fff3a8,#ffd54a);border:2px solid #241046;border-radius:100px;padding:10px 20px;
+  box-shadow:3px 3px 0 #241046;transition:transform .1s;}
+.slam__btn:active{transform:translate(3px,3px);box-shadow:none;}
+.slam__signers{font-family:"Gloria Hallelujah",cursive;font-size:18px;color:#d6006e;}
+
+.yc{max-width:1150px;margin:54px auto 0;}
+.yc__title{font-family:"Bangers",cursive;font-size:clamp(28px,5vw,52px);color:#fff;-webkit-text-stroke:2px #241046;
+  text-shadow:3px 3px 0 #00d0ff;letter-spacing:.03em;}
+.yc__sub{font-family:"Permanent Marker",cursive;color:#5a1e9e;font-size:clamp(12px,1.5vw,15px);margin-bottom:24px;}
+.yc__grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;}
+.ycc{background:transparent;border:0;padding:0;cursor:pointer;perspective:800px;height:150px;font-family:inherit;}
+.ycc__in{position:relative;width:100%;height:100%;transition:transform .5s var(--ease,ease);transform-style:preserve-3d;}
+.ycc.flip .ycc__in{transform:rotateY(180deg);}
+.ycc__face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border:2px solid #241046;border-radius:10px;padding:14px;display:flex;flex-direction:column;justify-content:center;
+  box-shadow:4px 4px 0 rgba(36,16,70,.3);overflow:hidden;}
+.ycc__front{background:linear-gradient(150deg,#fff,#e9f6ff);}
+.ycc__front b{font-family:"Bangers",cursive;font-size:22px;letter-spacing:.02em;color:#241046;line-height:1;}
+.ycc__front span{font-family:"Gloria Hallelujah",cursive;font-size:11px;color:#5a1e9e;margin-top:8px;line-height:1.3;}
+.ycc__front i{position:absolute;top:8px;right:10px;font-family:"Permanent Marker",cursive;font-style:normal;font-size:9px;color:#d6006e;
+  border:1px solid #d6006e;border-radius:4px;padding:1px 4px;}
+.ycc__front em{position:absolute;bottom:8px;right:10px;font-style:normal;font-family:"Permanent Marker",cursive;font-size:9px;color:#00a0c0;}
+.ycc__back{background:linear-gradient(150deg,#241046,#5a1e9e);transform:rotateY(180deg);}
+.ycc__back p{font-family:"Gloria Hallelujah",cursive;font-size:12.5px;color:#fff;line-height:1.35;}
+.ycc__back small{display:block;margin-top:8px;font-family:"Permanent Marker",cursive;color:#ffe600;font-size:10px;}
+.yc__note{font-family:"Gloria Hallelujah",cursive;font-size:12px;color:#3a1a66;max-width:70ch;margin:26px auto 0;line-height:1.5;}
+.yc__note b{color:#d6006e;}
+
+/* =========================================================
    RESPONSIVE
    ========================================================= */
 @media (max-width:900px){

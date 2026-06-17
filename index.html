@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Gloria+Hallelujah&family=Bangers&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0a09'/%3E%3Cpath d='M15 4h2v24h-2z M9 9h14v2H9z M11 15h10v1.6H11z' fill='%23c8a24a'/%3E%3C/svg%3E" />
 </head>
@@ -225,6 +226,36 @@
       <p class="archive__empty" id="qEmpty" hidden>Nothing here. Even the underground has limits — try another word.</p>
       <p class="archive__src">Sources cross-checked against public quote repositories (Goodreads, SparkNotes,
         LitCharts, Wikiquote) and the public-domain texts. Commonly mis-attributed lines were excluded.</p>
+    </section>
+
+    <!-- ============ DOSTOEVSKY'S SLAMBOOK (Y2K) ============ -->
+    <section class="slam" id="slambook">
+      <div class="slam__tape slam__tape--1"></div>
+      <div class="slam__tape slam__tape--2"></div>
+      <p class="slam__eyebrow">[ 07 — STRICTLY CONFIDENTIAL!! ]</p>
+      <h2 class="slam__wordart">Fedya's Slam Book <span>✰</span></h2>
+      <p class="slam__sub">✎ pass it on · do NOT show the teacher · sign ur name or ur cursed 4ever ✎</p>
+
+      <div class="slam__page">
+        <div class="slam__fields" id="slamFields"></div>
+        <div class="slam__doodles" aria-hidden="true" id="slamDoodles"></div>
+      </div>
+
+      <div class="slam__sign">
+        <span>♡ sign my slambook ♡</span>
+        <button id="slamSign" class="slam__btn">✦ ADD A DOODLE ✦</button>
+        <span class="slam__signers" id="slamSigners"></span>
+      </div>
+
+      <!-- YC yearbook -->
+      <div class="yc">
+        <h3 class="yc__title">★ Class of Y-Combinator ★</h3>
+        <p class="yc__sub">fedya rates his ✨startup✨ classmates — tap a card 4 his verdict</p>
+        <div class="yc__grid" id="ycGrid"></div>
+        <p class="yc__note">⚠ a curated sample of <b>real</b> YC-backed companies — the full 5,000+
+          directory couldn't be scraped in this sandbox (network's locked down), so these are
+          hand-picked &amp; hand-labelled. no made-up startups. ⚠</p>
+      </div>
     </section>
 
     <!-- copy toast -->

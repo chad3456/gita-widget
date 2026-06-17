@@ -1234,6 +1234,99 @@
     });
   }
 
+  /* ---------------------------------------------------------
+     DOSTOEVSKY'S SLAMBOOK (Y2K)  — bio is real; a couple of
+     answers are knowing anachronistic gags (marked with 🎧)
+  --------------------------------------------------------- */
+  const SLAM_FIELDS = [
+    { q: "Full name", a: "Fyodor Mikhailovich Dostoevsky" },
+    { q: "Goes by", a: "Fedya ♡", heart: true },
+    { q: "B-day", a: "Nov 11, 1821 ⭐ (Scorpio, obviously)" },
+    { q: "Hometown", a: "Moscow — born in a hospital for the poor" },
+    { q: "Skool", a: "Military Engineering Institute, St. Petersburg" },
+    { q: "Worst subject", a: "Maths & drafting. Became an engineer. Quit. Sorry dad." },
+    { q: "BFF 4 lyfe", a: "my big brother Mikhail" },
+    { q: "Crush", a: "Anna G. — took my dictation in 26 days, then married me ♡♡", heart: true },
+    { q: "Fav author", a: "Pushkin 4ever · \"we all crawled out of Gogol's Overcoat\"" },
+    { q: "Fav book", a: "the Gospels (smuggled it through Siberia)" },
+    { q: "Hobbies", a: "roulette 🎰 (do NOT lend me money), night walks" },
+    { q: "Biggest fear", a: "the firing squad (ask me about 1849…) + my fits" },
+    { q: "Dream job", a: "NOVELIST. obviously." },
+    { q: "Fav band", a: "anything in a minor key 🎧 (ok fine — Linkin Park gets the Underground)" },
+    { q: "Life motto", a: "\"Above all, don't lie to yourself.\"" },
+    { q: "Most likely to", a: "write 800 pages about ONE murder" },
+    { q: "Hottest take", a: "twice two makes FIVE is sometimes a very charming thing" },
+    { q: "Catchphrase", a: "beauty will save the world (the rest of u… doomed)" },
+  ];
+  const SLAM_DOODLES = [
+    { svg: "♡", x: "4%", y: "8%", s: 38, c: "#ff3db4" },
+    { svg: "✟", x: "92%", y: "12%", s: 30, c: "#5a1e9e" },
+    { svg: "★", x: "88%", y: "70%", s: 34, c: "#ffd54a" },
+    { svg: "☠", x: "7%", y: "74%", s: 32, c: "#241046" },
+    { svg: "ПОДПОЛЬЕ 4EVER", x: "50%", y: "4%", s: 16, c: "#d6006e", text: true },
+    { svg: "✦", x: "20%", y: "44%", s: 22, c: "#00d0ff" },
+  ];
+  const SLAM_SIGNERS = ["Rodya wuz here ♡", "Alyosha ✟", "Sonya ☆", "Mitya 🎲", "Ivan (skeptical)", "the Underground Man — anon.", "Prince M. :)", "Grushenka 💋", "Razumikhin!!", "Smerdyakov 👀"];
+
+  // curated REAL Y Combinator companies, labelled by Fyodor
+  const YC = [
+    { n: "Airbnb", w: "rent a stranger's home", l: "Strangers sleeping in strangers' beds — the whole earth is now The House of the Dead, but with five-star reviews." },
+    { n: "Stripe", w: "payments API", l: "They have made it frictionless to move money. Raskolnikov could simply have charged a subscription." },
+    { n: "Dropbox", w: "file storage", l: "A place to keep what you cannot bear to lose — and will lose anyway." },
+    { n: "Coinbase", w: "crypto exchange", l: "A casino dressed as a cathedral. The Gambler would mortgage his soul by Tuesday." },
+    { n: "DoorDash", w: "food delivery", l: "A man too proud to leave his room, fed by a man too poor to refuse. I already wrote this novel." },
+    { n: "Reddit", w: "forums", l: "Ten thousand Underground Men in one cellar, voting on their own humiliation." },
+    { n: "Twitch", w: "live streaming", l: "The crowd watches one man play and feels it has lived. Vanity, vanity." },
+    { n: "Instacart", w: "grocery delivery", l: "Penance, delivered in thirty minutes or less." },
+    { n: "Cruise", w: "self-driving cars", l: "A carriage that drives itself — at last, no coachman to flog in my dreams." },
+    { n: "GitLab", w: "code collaboration", l: "A confession booth for code: every sin logged, and every sin revertible. If only souls had branches." },
+    { n: "Gusto", w: "payroll", l: "They tend the clerk's small wages. Akaky Akakievich would have wept with gratitude." },
+    { n: "Brex", w: "corporate cards", l: "Credit without conscience — my favourite kind of credit." },
+    { n: "Zapier", w: "app automation", l: "It connects all things to all things. I connected guilt to punishment and needed no integration." },
+    { n: "Docker", w: "containers", l: "Each process sealed in its own container, isolated, reproducible — the modern soul, shipped." },
+    { n: "Heroku", w: "cloud platform", l: "It deploys your dreams to the cloud, where they belong: aloft, and unreachable." },
+    { n: "Scribd", w: "subscription library", l: "A library you rent but never finish — like a Petersburg winter." },
+    { n: "Disqus", w: "comment system", l: "The comments beneath the article: the truest Notes from Underground yet written." },
+    { n: "Mixpanel", w: "product analytics", l: "They measure every twitch of the will. Free will — quantified, charted, and sold." },
+    { n: "Segment", w: "customer data", l: "They gather the self into data and ship it elsewhere. The double, monetised." },
+    { n: "Flexport", w: "freight logistics", l: "Cargo across the whole earth — and somewhere in a container, my manuscripts, lost in transit." },
+    { n: "Faire", w: "wholesale marketplace", l: "Beauty for the small shops, sold by the pallet. Beauty will save the world — bulk orders only." },
+    { n: "Razorpay", w: "payments (India)", l: "Another gate for money to pass through. The old moneylender, reincarnated as an API." },
+    { n: "Ginkgo Bioworks", w: "synthetic biology", l: "They program the living cell as I programmed the soul — and with markedly fewer scruples." },
+    { n: "Checkr", w: "background checks", l: "They would never have cleared Raskolnikov for hire. Wise, wise." },
+    { n: "Rappi", w: "delivery (LatAm)", l: "Everything delivered, nothing earned — and still the heart is restless." },
+    { n: "Weebly", w: "website builder", l: "Now anyone may build a website. Not everyone should. This, too, is pride." },
+  ];
+
+  function initSlambook() {
+    const fields = document.getElementById("slamFields");
+    if (!fields) return;
+    fields.innerHTML = SLAM_FIELDS.map((f) =>
+      `<div class="field"><b>${f.q}</b><span class="${f.heart ? "heart" : ""}">${f.a}</span></div>`).join("");
+    const dood = document.getElementById("slamDoodles");
+    dood.innerHTML = SLAM_DOODLES.map((d) =>
+      `<span class="slam__doodle" style="left:${d.x};top:${d.y};font-size:${d.s}px;color:${d.c};${d.text ? "font-family:'Permanent Marker',cursive;white-space:nowrap;transform:translateX(-50%) rotate(-4deg);" : ""}">${d.svg}</span>`).join("");
+    const signBtn = document.getElementById("slamSign");
+    const signers = document.getElementById("slamSigners");
+    let i = 0;
+    if (signBtn) signBtn.addEventListener("click", () => {
+      const s = document.createElement("span");
+      s.textContent = " " + SLAM_SIGNERS[i % SLAM_SIGNERS.length] + "  ";
+      s.style.cssText = "display:inline-block;transform:rotate(" + ((Math.random() * 10 - 5).toFixed(1)) + "deg);";
+      signers.appendChild(s); i++;
+    });
+    // YC flip cards
+    const grid = document.getElementById("ycGrid");
+    grid.innerHTML = YC.map((c, k) => `
+      <button class="ycc" data-k="${k}" aria-label="${c.n} — tap for verdict">
+        <div class="ycc__in">
+          <div class="ycc__face ycc__front"><i>YC</i><b>${c.n}</b><span>${c.w}</span><em>tap →</em></div>
+          <div class="ycc__face ycc__back"><p>"${c.l}"</p><small>— Fedya</small></div>
+        </div>
+      </button>`).join("");
+    grid.querySelectorAll(".ycc").forEach((b) => b.addEventListener("click", () => b.classList.toggle("flip")));
+  }
+
   let lifeTourScene = null;
   addEventListener("DOMContentLoaded", () => {
     initLenis();
@@ -1241,6 +1334,7 @@
     drawPrisoners();
     buildWorks();
     initBooks();
+    initSlambook();
     buildQuotes();
     buildStations();
     initArchive();
