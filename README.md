@@ -16,10 +16,15 @@ interactive.
 - **Hover anywhere** for the estimated time to that exact point, the country, and the
   winning itinerary (e.g. *access → fly LHR→JFK → arrive 25 km drive*).
 - A live stat: **share of world cities reachable within 24 h** from your city.
-- **Open-infrastructure layers** over the same globe (toggleable, same naming/style):
-  **🛢 oil & gas pipelines** (20 major world systems — Druzhba, Nord Stream, Power of Siberia,
-  Keystone, Baku–Tbilisi–Ceyhan, West–East, TANAP/TAP, TAPI…), **🛰 submarine cables**
-  (MAREA, FASTER, SEA-ME-WE, 2Africa…), and **⚓ the world's busiest ports**.
+- **Open-infrastructure layers** over the same globe — 13 toggleable layers in 4 groups,
+  each with a **distinct glyph + colour**, and a legend that lists only the layers you've
+  switched on (so dense overlays stay readable):
+  - **Transport & trade** — 🛢 oil & gas pipelines (20 systems), 🛰 submarine cables, ⚓ ports.
+  - **Energy** — ☢ nuclear plants, ⛽ refineries, 🔥 LNG terminals, 🌊 major dams.
+  - **Tech & science** — 🖥 data-centre hubs, 🔲 semiconductor fabs, 🔭 research/observatories
+    (CERN, ITER, ALMA, LIGO, FAST…), 🚀 spaceports.
+  - **Defence & industry** — 🛡 publicly-documented major military bases, 🏭 manufacturing hubs.
+  - 117 sites + 20 pipelines + 6 cables + 31 ports; hover any marker for its name.
 - **☁ Live weather** for the chosen city via the free, keyless **Open-Meteo** API
   (graceful offline fallback).
 

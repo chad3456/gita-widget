@@ -59,11 +59,7 @@
 
     <div class="ctrl">
       <label class="ctrl__label">INFRASTRUCTURE LAYERS</label>
-      <div class="modes" id="layers">
-        <button class="mode active" data-l="pipelines"><i>🛢</i> Pipelines</button>
-        <button class="mode" data-l="cables"><i>🛰</i> Subsea cables</button>
-        <button class="mode active" data-l="ports"><i>⚓</i> Major ports</button>
-      </div>
+      <div class="layerstack" id="layers"></div>
     </div>
 
     <div class="ctrl ctrl--row">
@@ -114,9 +110,17 @@
           2Africa…) in the style of <b>TeleGeography</b>'s Submarine Cable Map.</li>
         <li><b>⚓ Major ports</b> — the world's busiest container ports by throughput
           (<b>UNCTAD</b> / <b>Lloyd's List</b> rankings), at real coordinates.</li>
+        <li><b>Energy</b> — ☢ nuclear plants (IAEA PRIS), ⛽ refineries, 🔥 LNG terminals and
+          🌊 major dams (Global Energy Monitor / public registers).</li>
+        <li><b>Tech &amp; science</b> — 🖥 data-centre hubs, 🔲 semiconductor fabs (company
+          disclosures), 🔭 research &amp; observatories (CERN, ITER, ALMA, LIGO…) and 🚀 spaceports.</li>
+        <li><b>Defence &amp; industry</b> — 🛡 major <i>publicly-documented</i> military bases
+          (atlas reference only) and 🏭 manufacturing hubs (autos, shipyards, mega-factories).</li>
         <li><b>☁ Weather</b> — live current conditions for your city from the free, open
           <b>Open-Meteo</b> API (no key); falls back gracefully when offline.</li>
       </ul>
+      <p>Each category has a <b>distinct glyph and colour</b>, and the legend lists only the
+        layers you have switched on — so dense overlays stay readable.</p>
       <p class="modal__fine">This is a transparent <i>model</i>, not a routing engine — travel-time
         figures are realistic estimates and the infrastructure routes are researched approximations
         for exploration, not survey-grade GIS. Built with D3 (geo + contour). Data: Natural Earth,

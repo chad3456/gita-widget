@@ -48,3 +48,63 @@ window.INFRA = {
     ["Piraeus",23.62,37.94],["Mundra",69.7,22.84],["Panama (Balboa)",-79.5,9.0],["Melbourne",144.9,-37.84],
   ].map(p => ({ n: p[0], x: p[1], y: p[2] })),
 };
+
+/* ---------------------------------------------------------
+   POINT SITES — key energy, technology, science, defence and
+   manufacturing infrastructure. Famous, publicly-documented
+   locations at real coordinates (researched approximations).
+   Sources: Wikipedia/OpenStreetMap, IAEA PRIS (nuclear),
+   Global Energy Monitor, company disclosures, public registers.
+   Military = widely-documented major bases (atlas reference only).
+   --------------------------------------------------------- */
+window.INFRA.sites = [
+  { key:"nuclear", label:"Nuclear plants", icon:"☢", shape:"ring", color:"#ffe066", pts:[
+    ["Kashiwazaki-Kariwa",138.60,37.43],["Bruce",-81.60,44.32],["Zaporizhzhia",34.59,47.51],
+    ["Hanul",129.38,37.09],["Gravelines",2.13,51.01],["Palo Verde",-112.86,33.39],
+    ["Cattenom",6.22,49.42],["Diablo Canyon",-120.85,35.21],["Sizewell",1.62,52.21],
+    ["Olkiluoto",21.44,61.24],["Barakah",52.20,23.97],["Tianwan",119.46,34.69],
+    ["Kudankulam",77.71,8.17],["Fukushima Daiichi",141.03,37.42]] },
+  { key:"refinery", label:"Oil refineries", icon:"⛽", shape:"triangle", color:"#ff7a45", pts:[
+    ["Jamnagar",69.95,22.34],["Ulsan",129.36,35.50],["Ruwais",52.73,24.11],["Port Arthur",-93.93,29.87],
+    ["Baytown",-94.98,29.74],["Pernis (Rotterdam)",4.39,51.88],["Jubail",49.66,27.00],
+    ["Jurong (Singapore)",103.69,1.27],["Mailiao",120.20,23.79],["Yeosu",127.76,34.76]] },
+  { key:"lng", label:"LNG terminals", icon:"🔥", shape:"invtri", color:"#5ad1ff", pts:[
+    ["Ras Laffan",51.60,25.90],["Sabine Pass",-93.87,29.73],["Gladstone",151.25,-23.84],
+    ["Sabetta (Yamal)",72.10,71.27],["Bonny",7.17,4.43],["Gorgon",115.00,-20.60],
+    ["Bintulu",113.05,3.18],["Cove Point",-76.39,38.40]] },
+  { key:"dam", label:"Major dams", icon:"🌊", shape:"rect", color:"#4aa3ff", pts:[
+    ["Three Gorges",111.00,30.82],["Itaipu",-54.59,-25.41],["Grand Coulee",-118.98,47.96],
+    ["Hoover",-114.74,36.02],["Aswan High",32.88,23.97],["Tucuruí",-49.64,-3.83],
+    ["Guri",-62.98,7.77],["Belo Monte",-51.95,-3.13],["Akosombo",0.06,6.30],["Robert-Bourassa",-77.50,53.79]] },
+  { key:"datacenter", label:"Data-centre hubs", icon:"🖥", shape:"square", color:"#34e1d6", pts:[
+    ["Ashburn (DC Alley)",-77.49,39.04],["The Dalles",-121.20,45.60],["Dublin",-6.27,53.35],
+    ["Amsterdam",4.90,52.37],["Frankfurt",8.68,50.11],["Singapore",103.82,1.35],["Mumbai",72.88,19.08],
+    ["Tokyo",139.69,35.68],["São Paulo",-46.63,-23.55],["Quincy WA",-119.85,47.23],["Council Bluffs",-95.87,41.26]] },
+  { key:"fab", label:"Semiconductor fabs", icon:"🔲", shape:"hex", color:"#e056b6", pts:[
+    ["Hsinchu (TSMC)",121.00,24.78],["Tainan (TSMC)",120.27,23.10],["Pyeongtaek (Samsung)",127.05,37.00],
+    ["Hwaseong (Samsung)",127.00,37.20],["Hillsboro (Intel)",-122.97,45.54],["Chandler (Intel)",-111.84,33.30],
+    ["Dresden",13.74,51.05],["Kiryat Gat (Intel)",34.77,31.61],["Kumamoto (JASM)",130.80,32.90],
+    ["Malta NY (GF)",-73.79,43.00],["Wuxi",120.30,31.57]] },
+  { key:"science", label:"Science & research", icon:"🔭", shape:"plus", color:"#eef2fb", pts:[
+    ["CERN",6.05,46.23],["Fermilab",-88.27,41.84],["ITER",5.76,43.69],["ALMA / Paranal",-70.40,-24.63],
+    ["Mauna Kea",-155.47,19.82],["FAST",106.86,25.65],["Green Bank",-79.84,38.43],
+    ["LIGO Hanford",-119.41,46.45],["SKA-Mid (Karoo)",21.41,-30.72],["Vera Rubin",-70.74,-30.24],
+    ["Gran Sasso",13.57,42.45]] },
+  { key:"spaceport", label:"Spaceports", icon:"🚀", shape:"star", color:"#ffd166", pts:[
+    ["Kennedy / Canaveral",-80.60,28.50],["Baikonur",63.34,45.96],["Kourou",-52.77,5.23],
+    ["Vandenberg",-120.60,34.74],["Starbase (Boca Chica)",-97.18,25.99],["Wenchang",110.95,19.61],
+    ["Jiuquan",100.29,40.96],["Sriharikota",80.23,13.72],["Tanegashima",130.97,30.40],
+    ["Plesetsk",40.58,62.93],["Vostochny",128.33,51.88],["Māhia (Rocket Lab)",177.86,-39.26]] },
+  { key:"military", label:"Military bases (public)", icon:"🛡", shape:"diamond", color:"#ff5a52", pts:[
+    ["Norfolk Naval",-76.33,36.95],["Pearl Harbor",-157.95,21.36],["San Diego",-117.18,32.68],
+    ["Diego Garcia",72.41,-7.31],["Andersen (Guam)",144.80,13.58],["Ramstein",7.60,49.44],
+    ["Aviano",12.60,46.03],["Incirlik",35.42,37.00],["Yokosuka",139.67,35.29],["Kadena (Okinawa)",127.77,26.36],
+    ["Camp Humphreys",127.03,36.96],["Al Udeid",51.32,25.12],["Camp Lemonnier",43.15,11.55],
+    ["Faslane",-4.82,56.07],["Severomorsk",33.42,69.07],["Yulin (Hainan)",109.50,18.20]] },
+  { key:"manufacturing", label:"Manufacturing hubs", icon:"🏭", shape:"gear", color:"#f4a83f", pts:[
+    ["Wolfsburg (VW)",10.79,52.43],["Toyota City",137.16,35.08],["Ulsan (Hyundai)",129.36,35.54],
+    ["Detroit",-83.05,42.33],["Shanghai (Giga)",121.80,30.90],["Stuttgart (Mercedes)",9.18,48.78],
+    ["Zhengzhou (Foxconn)",113.68,34.72],["Giga Texas",-97.62,30.22],["Everett (Boeing)",-122.28,47.92],
+    ["Toulouse (Airbus)",1.36,43.63],["Pohang (POSCO)",129.36,36.02],["Jamshedpur (Tata)",86.20,22.80],
+    ["Geoje (shipyards)",128.62,34.88],["Chennai",80.27,13.08]] },
+];

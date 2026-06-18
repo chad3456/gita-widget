@@ -67,8 +67,25 @@
   const modes = { air: true, rail: true, drive: true, walk: true };
   let showAirports = false, showGrid = true, animating = false;
   const INFRA = window.INFRA || { pipelines: [], cables: [], ports: [] };
+  const SITES = INFRA.sites || [];
+  const SITE = {}; SITES.forEach(s => SITE[s.key] = s);
   const layers = { pipelines: true, cables: false, ports: true };
+  SITES.forEach(s => layers[s.key] = false);
   const PIPE_OIL = "#ff7a45", PIPE_GAS = "#3ad1c0", CABLE = "#7ac8ff", PORT = "#ffd166";
+  // panel grouping of every toggleable layer
+  const GROUPS = [
+    { n: "TRANSPORT & TRADE", k: ["pipelines", "cables", "ports"] },
+    { n: "ENERGY", k: ["nuclear", "refinery", "lng", "dam"] },
+    { n: "TECH & SCIENCE", k: ["datacenter", "fab", "science", "spaceport"] },
+    { n: "DEFENCE & INDUSTRY", k: ["military", "manufacturing"] },
+  ];
+  const BASEMETA = {
+    pipelines: { label: "Pipelines", icon: "🛢", color: PIPE_OIL },
+    cables: { label: "Subsea cables", icon: "🛰", color: CABLE },
+    ports: { label: "Major ports", icon: "⚓", color: PORT },
+  };
+  const meta = (k) => BASEMETA[k] || { label: SITE[k].label, icon: SITE[k].icon, color: SITE[k].color };
+  let markerHits = [];
   const WCODE = { 0:["☀","Clear"],1:["🌤","Mainly clear"],2:["⛅","Partly cloudy"],3:["☁","Overcast"],
     45:["🌫","Fog"],48:["🌫","Rime fog"],51:["🌦","Drizzle"],53:["🌦","Drizzle"],55:["🌦","Drizzle"],
     56:["🌧","Freezing drizzle"],57:["🌧","Freezing drizzle"],61:["🌧","Rain"],63:["🌧","Rain"],65:["🌧","Heavy rain"],
@@ -317,17 +334,60 @@
         ctx.restore();
       }
     }
+    markerHits = [];
     // major ports (diamonds)
     if (layers.ports) {
       for (const pt of INFRA.ports) {
         const q = project(pt.x, pt.y); if (!q) continue;
-        ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(Math.PI / 4);
-        ctx.fillStyle = PORT; ctx.strokeStyle = "rgba(7,10,18,.9)"; ctx.lineWidth = 1;
-        ctx.fillRect(-2.6, -2.6, 5.2, 5.2); ctx.strokeRect(-2.6, -2.6, 5.2, 5.2);
-        ctx.restore();
+        drawMarker(q[0], q[1], "diamond", PORT, 2.8);
+        markerHits.push({ x: q[0], y: q[1], n: pt.n, c: "Major port" });
+      }
+    }
+    // point site categories — each with a distinct glyph
+    for (const s of SITES) {
+      if (!layers[s.key]) continue;
+      for (const p of s.pts) {
+        const q = project(p[1], p[2]); if (!q) continue;
+        drawMarker(q[0], q[1], s.shape, s.color, 3.1);
+        markerHits.push({ x: q[0], y: q[1], n: p[0], c: s.label });
       }
     }
   }
+
+  function drawMarker(x, y, shape, color, s) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = color; ctx.strokeStyle = color; ctx.lineWidth = 1.4;
+    ctx.lineJoin = "round";
+    const dark = "rgba(7,10,18,.85)";
+    if (shape === "ring") {
+      ctx.beginPath(); ctx.arc(0, 0, s, 0, 7); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, s * 0.34, 0, 7); ctx.fill();
+    } else if (shape === "triangle") {
+      tri(0, s, false); ctx.fill(); ctx.lineWidth = .8; ctx.strokeStyle = dark; ctx.stroke();
+    } else if (shape === "invtri") {
+      tri(0, s, true); ctx.fill(); ctx.lineWidth = .8; ctx.strokeStyle = dark; ctx.stroke();
+    } else if (shape === "square") {
+      ctx.fillRect(-s, -s, 2 * s, 2 * s); ctx.strokeStyle = dark; ctx.lineWidth = .8; ctx.strokeRect(-s, -s, 2 * s, 2 * s);
+    } else if (shape === "rect") {
+      ctx.fillRect(-s * 1.3, -s * 0.7, s * 2.6, s * 1.4); ctx.strokeStyle = dark; ctx.lineWidth = .8; ctx.strokeRect(-s * 1.3, -s * 0.7, s * 2.6, s * 1.4);
+    } else if (shape === "diamond") {
+      ctx.rotate(Math.PI / 4); ctx.fillRect(-s, -s, 2 * s, 2 * s); ctx.strokeStyle = dark; ctx.lineWidth = .8; ctx.strokeRect(-s, -s, 2 * s, 2 * s);
+    } else if (shape === "hex") {
+      poly(6, s, -Math.PI / 2); ctx.fill(); ctx.strokeStyle = dark; ctx.lineWidth = .8; ctx.stroke();
+    } else if (shape === "plus") {
+      const t = s * 0.4; ctx.fillRect(-t, -s, 2 * t, 2 * s); ctx.fillRect(-s, -t, 2 * s, 2 * t);
+    } else if (shape === "star") {
+      star(0, 0, 5, s * 1.3, s * 0.55); ctx.fill();
+    } else if (shape === "gear") {
+      poly(8, s, 0); ctx.fill(); ctx.fillStyle = dark; ctx.beginPath(); ctx.arc(0, 0, s * 0.4, 0, 7); ctx.fill();
+    } else { ctx.beginPath(); ctx.arc(0, 0, s, 0, 7); ctx.fill(); }
+    ctx.restore();
+  }
+  function tri(cx, r, inv) { const d = inv ? -1 : 1; ctx.beginPath();
+    ctx.moveTo(0, -r * d); ctx.lineTo(r * 0.9, r * 0.8 * d); ctx.lineTo(-r * 0.9, r * 0.8 * d); ctx.closePath(); }
+  function poly(n, r, rot) { ctx.beginPath();
+    for (let i = 0; i < n; i++) { const a = rot + i / n * Math.PI * 2; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); }
 
   function drawBand(b) {
     ctx.beginPath();
@@ -398,6 +458,13 @@
   function onMove(e) {
     if (animating || !origin) { tip.hidden = true; return; }
     const mx = e.clientX, my = e.clientY;
+    // hovering an infrastructure marker? show its name first
+    let near = null, nd = 9;
+    for (const h of markerHits) { const d = Math.hypot(h.x - mx, h.y - my); if (d < nd) { nd = d; near = h; } }
+    if (near) {
+      tip.innerHTML = `<div class="tip__t" style="font-size:18px">${near.n}</div><div class="tip__place">${near.c}</div>`;
+      tip.style.left = mx + "px"; tip.style.top = my + "px"; tip.hidden = false; return;
+    }
     const inv = projection.invert([mx, my]);
     if (!inv) { tip.hidden = true; return; }
     const back = project(inv[0], inv[1]);
@@ -421,11 +488,31 @@
     const el = document.getElementById("legendBands");
     el.innerHTML = BANDS.map(h => `<div class="legend__row"><span class="legend__sw" style="background:${COLORS[h]}"></span>${BAND_LABEL[h]}</div>`).join("")
       + `<div class="legend__row"><span class="legend__sw" style="background:#0e1421;border:1px solid rgba(180,200,240,.2)"></span>beyond 48 h</div>`;
-    document.getElementById("legendInfra").innerHTML =
-      `<div class="legend__row"><span class="legend__sw" style="background:${PIPE_OIL}"></span>oil pipeline</div>`
-      + `<div class="legend__row"><span class="legend__sw" style="background:${PIPE_GAS}"></span>gas pipeline</div>`
-      + `<div class="legend__row"><span class="legend__sw" style="background:repeating-linear-gradient(90deg,${CABLE} 0 3px,transparent 3px 6px)"></span>subsea cable</div>`
-      + `<div class="legend__row"><span class="legend__sw" style="width:11px;height:11px;transform:rotate(45deg);background:${PORT}"></span>major port</div>`;
+    buildLegendInfra();
+  }
+  function buildLegendInfra() {                 // only show rows for ACTIVE layers
+    const el = document.getElementById("legendInfra"); const rows = [];
+    const sw = (style) => `<span class="legend__sw" style="${style}"></span>`;
+    if (layers.pipelines) {
+      rows.push(`${sw(`background:${PIPE_OIL}`)}oil pipeline`);
+      rows.push(`${sw(`background:${PIPE_GAS}`)}gas pipeline`);
+    }
+    if (layers.cables) rows.push(`${sw(`background:repeating-linear-gradient(90deg,${CABLE} 0 3px,transparent 3px 6px)`)}subsea cable`);
+    if (layers.ports) rows.push(`${sw(`width:11px;height:11px;transform:rotate(45deg);background:${PORT}`)}major port`);
+    for (const s of SITES) if (layers[s.key]) rows.push(`${sw(`background:${s.color}`)}${s.icon} ${s.label}`);
+    el.innerHTML = rows.length ? rows.map(r => `<div class="legend__row">${r}</div>`).join("")
+      : `<div class="legend__row" style="color:var(--faint)">— toggle a layer —</div>`;
+  }
+  function buildLayers() {
+    const host = document.getElementById("layers");
+    host.innerHTML = GROUPS.map(g => `<div class="lgroup"><div class="lgroup__h">${g.n}</div>
+      <div class="lgroup__chips">${g.k.map(k => { const m = meta(k);
+        return `<button class="lchip ${layers[k] ? "active" : ""}" data-l="${k}">
+          <span class="dotc" style="background:${m.color}"></span><i>${m.icon}</i>${m.label}</button>`; }).join("")}</div></div>`).join("");
+    host.querySelectorAll(".lchip").forEach(b => b.addEventListener("click", () => {
+      const k = b.dataset.l; layers[k] = !layers[k]; b.classList.toggle("active", layers[k]);
+      buildLegendInfra(); render();
+    }));
   }
   function fetchWeather(city) {
     const el = document.getElementById("weather");
@@ -470,9 +557,7 @@
       const m = b.dataset.m; modes[m] = !modes[m]; b.classList.toggle("active", modes[m]);
       computeField(); render();
     }));
-    document.querySelectorAll("#layers .mode").forEach(b => b.addEventListener("click", () => {
-      const l = b.dataset.l; layers[l] = !layers[l]; b.classList.toggle("active", layers[l]); render();
-    }));
+    buildLayers();
     document.getElementById("tgAirports").addEventListener("change", e => { showAirports = e.target.checked; render(); });
     document.getElementById("tgGrid").addEventListener("change", e => { showGrid = e.target.checked; render(); });
     const modal = document.getElementById("methodModal");
