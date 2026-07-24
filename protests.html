@@ -180,6 +180,28 @@
   .legend .sw.c { background: var(--concluded); }
   .legend .sz { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); }
   .legend .sz i { display: inline-block; border-radius: 50%; background: var(--muted); }
+  .legend .sw.lv { background: var(--seq); box-shadow: 0 0 0 3px var(--seq-soft); }
+
+  .lv { cursor: pointer; }
+  .lv .lvc { fill: none; stroke: var(--seq); stroke-width: 1.6; vector-effect: non-scaling-stroke; }
+  .lv .lvp { fill: var(--seq); transform-box: fill-box; transform-origin: center; animation: pulse 2.2s ease-out infinite; opacity: .4; }
+  .lv .lvd { fill: var(--seq); opacity: .85; }
+
+  .livebtn { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-2); background: transparent; color: var(--ink-2); border-radius: 8px; padding: 6px 12px; font: inherit; font-size: 12.5px; cursor: pointer; }
+  .livebtn .lb-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .livebtn:hover { border-color: var(--seq); color: var(--seq); }
+  .livebtn[aria-pressed="true"] { border-color: var(--seq); color: var(--seq); background: var(--seq-soft); font-weight: 600; }
+  .livebtn[aria-pressed="true"] .lb-dot { background: var(--seq); animation: ping 1.6s infinite; }
+  .livebtn.loading .lb-dot { animation: spin 1s linear infinite; border-radius: 2px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .livebadge { position: absolute; top: 10px; left: 10px; display: inline-flex; align-items: center; gap: 7px; background: color-mix(in srgb, var(--panel) 82%, transparent); backdrop-filter: blur(6px); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; font-size: 11px; color: var(--ink-2); font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .livebadge .lb-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex: none; }
+  .livebadge[data-state="live"] { color: var(--seq); border-color: color-mix(in srgb, var(--seq) 45%, transparent); }
+  .livebadge[data-state="live"] .lb-dot { background: var(--seq); animation: ping 1.6s infinite; }
+  .livebadge[data-state="loading"] .lb-dot { background: var(--seq); animation: spin 1s linear infinite; border-radius: 1px; }
+  .livebadge[data-state="error"] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+  .livebadge[data-state="error"] .lb-dot { background: var(--accent); }
 
   .tooltip { position: fixed; z-index: 40; pointer-events: none; background: var(--ink); color: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: 12px; max-width: 240px; box-shadow: 0 8px 30px rgba(0,0,0,.3); opacity: 0; transform: translateY(4px); transition: opacity .12s; }
   .tooltip.on { opacity: 1; transform: none; }
@@ -301,6 +323,7 @@
       <input id="q" type="search" placeholder="Search movement or country…" autocomplete="off" />
     </label>
     <div class="chips" id="chips" role="group" aria-label="Cause"></div>
+    <button class="livebtn" id="liveBtn" type="button" aria-pressed="false" title="Overlay live protest activity from GDELT (last 24h)"><span class="lb-dot"></span>Go live</button>
     <button class="reset" id="reset" type="button">Reset</button>
   </section>
 
@@ -311,6 +334,7 @@
       <svg class="map" id="map" viewBox="0 0 1000 500" role="img" aria-label="World map of protest movements">
         <g id="scene">
           <g id="lands"></g>
+          <g id="live"></g>
           <g id="marks"></g>
         </g>
       </svg>
@@ -322,9 +346,13 @@
       <div class="legend">
         <span class="li"><span class="sw a"></span>Active now</span>
         <span class="li"><span class="sw c"></span>Concluded</span>
+        <span class="li" id="liveLegend" hidden><span class="sw lv"></span>Live signal</span>
         <span class="sz">size = peak crowd
           <i style="width:6px;height:6px"></i><i style="width:10px;height:10px"></i><i style="width:15px;height:15px"></i>
         </span>
+      </div>
+      <div class="livebadge" id="liveBadge" data-state="off">
+        <span class="lb-dot"></span><span id="liveText">Snapshot</span>
       </div>
     </div>
     <aside class="drawer empty" id="drawer">
@@ -724,4 +752,103 @@ function render() {
 }
 buildChips();
 render();
+
+// =================== LIVE DATA (GDELT) ===================
+// Realtime overlay: live worldwide protest activity from GDELT's public GEO 2.0
+// API (no key, CORS-enabled). Works wherever outbound fetch is permitted —
+// opened locally or hosted (e.g. GitHub Pages). Inside the claude.ai artifact
+// sandbox, network calls are blocked by policy, so this gracefully falls back
+// to the curated snapshot and says so.
+const live = { on: false, timer: null, data: [], lastOk: null };
+const liveG = document.getElementById("live");
+const liveBtn = document.getElementById("liveBtn");
+const liveBadge = document.getElementById("liveBadge");
+const liveText = document.getElementById("liveText");
+const liveLegend = document.getElementById("liveLegend");
+
+// Candidate endpoints (tried in order). GEO 2.0 returns GeoJSON points of
+// where "protest" news is concentrated over the trailing window.
+const GDELT_URLS = [
+  "https://api.gdeltproject.org/api/v2/geo/geo?query=(protest%20OR%20demonstration%20OR%20rally)&format=GeoJSON&timespan=24h",
+  "https://api.gdeltproject.org/api/v2/geo/geo?query=protest&format=GeoJSON&timespan=1d"
+];
+
+function setBadge(state, text) { liveBadge.dataset.state = state; liveText.textContent = text; }
+
+async function fetchLive() {
+  liveBtn.classList.add("loading");
+  setBadge("loading", "Fetching live…");
+  let lastErr = null;
+  for (const url of GDELT_URLS) {
+    try {
+      const ctl = new AbortController();
+      const to = setTimeout(() => ctl.abort(), 12000);
+      const res = await fetch(url, { signal: ctl.signal, mode: "cors" });
+      clearTimeout(to);
+      if (!res.ok) { lastErr = "HTTP " + res.status; continue; }
+      const gj = await res.json();
+      const feats = (gj && gj.features) || [];
+      live.data = feats.map(f => {
+        const g = f.geometry || {}, pr = f.properties || {};
+        const c = (g.coordinates || []);
+        const cnt = pr.count || pr.mentions || pr.value || (pr.name ? 1 : 0);
+        return { lon: +c[0], lat: +c[1], name: pr.name || pr.location || "", count: +cnt || 1, html: pr.html || "" };
+      }).filter(d => isFinite(d.lon) && isFinite(d.lat) && (d.lat !== 0 || d.lon !== 0));
+      live.lastOk = new Date();
+      liveBtn.classList.remove("loading");
+      renderLive();
+      const t = live.lastOk.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      setBadge("live", "LIVE · " + live.data.length + " hotspots · " + t);
+      return true;
+    } catch (e) { lastErr = (e && e.name === "AbortError") ? "timeout" : (e && e.message) || "blocked"; }
+  }
+  // all endpoints failed → graceful fallback
+  liveBtn.classList.remove("loading");
+  live.data = [];
+  renderLive();
+  setBadge("error", "Live feed blocked here — snapshot");
+  console.info("GDELT live fetch unavailable (" + lastErr + "). This is expected inside the artifact sandbox; host the page or open it locally for live data.");
+  return false;
+}
+
+function renderLive() {
+  liveG.textContent = "";
+  if (!live.on || !live.data.length) return;
+  const mx = Math.max(...live.data.map(d => d.count), 1);
+  const rl = c => 2.5 + (Math.sqrt(c) / Math.sqrt(mx)) * 11;
+  live.data.forEach(d => {
+    const x = px(d.lon), y = py(d.lat), r = rl(d.count);
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("class", "lv");
+    g.appendChild(mkLV(x, y, r, "lvp"));
+    g.appendChild(mkLV(x, y, r, "lvd"));
+    g.appendChild(mkLV(x, y, r + 2, "lvc"));
+    g.addEventListener("mouseenter", e => showTip(e, "<b>" + (d.name || "Protest activity") + "</b><div class='tt-sub'>" + d.count + " recent article" + (d.count > 1 ? "s" : "") + " · live via GDELT</div>"));
+    g.addEventListener("mousemove", moveTip);
+    g.addEventListener("mouseleave", hideTip);
+    liveG.appendChild(g);
+  });
+}
+function mkLV(x, y, r, cls) {
+  const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  c.setAttribute("cx", x); c.setAttribute("cy", y); c.setAttribute("r", r); c.setAttribute("class", cls);
+  return c;
+}
+
+liveBtn.onclick = () => {
+  live.on = !live.on;
+  liveBtn.setAttribute("aria-pressed", live.on);
+  liveLegend.hidden = !live.on;
+  if (live.on) {
+    liveBtn.lastChild.textContent = "Live on";
+    fetchLive();
+    live.timer = setInterval(fetchLive, 300000); // refresh every 5 min
+  } else {
+    liveBtn.lastChild.textContent = "Go live";
+    if (live.timer) clearInterval(live.timer);
+    live.timer = null;
+    renderLive();
+    setBadge("off", "Snapshot");
+  }
+};
 </script>
