@@ -1,0 +1,370 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tweet Time Machine</title>
+<style>
+  :root {
+    --bg: #f6f8fa; --panel: #ffffff; --panel-2: #eef1f4; --ink: #0f1419; --ink-2: #536471;
+    --muted: #8b98a5; --line: #e1e8ed; --line-2: #cfd9de; --accent: #1d9bf0; --accent-2: #1a8cd8;
+    --accent-soft: #1d9bf01a; --good: #00ba7c; --warn: #f4212e; --shadow: 0 1px 3px rgba(15,20,25,.08), 0 8px 28px rgba(15,20,25,.07);
+    --bar: #1d9bf0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0a0f14; --panel: #15202b; --panel-2: #1c2732; --ink: #e7e9ea; --ink-2: #8b98a5;
+      --muted: #5c6b7a; --line: #22303c; --line-2: #38444d; --accent: #1d9bf0; --accent-2: #4bb2f5;
+      --accent-soft: #1d9bf022; --good: #00ba7c; --warn: #f4212e; --shadow: 0 1px 3px rgba(0,0,0,.4), 0 12px 40px rgba(0,0,0,.5);
+      --bar: #1d9bf0;
+    }
+  }
+  :root[data-theme="light"] { --bg:#f6f8fa;--panel:#fff;--panel-2:#eef1f4;--ink:#0f1419;--ink-2:#536471;--muted:#8b98a5;--line:#e1e8ed;--line-2:#cfd9de;--accent:#1d9bf0;--accent-2:#1a8cd8;--accent-soft:#1d9bf01a;--shadow:0 1px 3px rgba(15,20,25,.08),0 8px 28px rgba(15,20,25,.07); }
+  :root[data-theme="dark"] { --bg:#0a0f14;--panel:#15202b;--panel-2:#1c2732;--ink:#e7e9ea;--ink-2:#8b98a5;--muted:#5c6b7a;--line:#22303c;--line-2:#38444d;--accent:#1d9bf0;--accent-2:#4bb2f5;--accent-soft:#1d9bf022;--shadow:0 1px 3px rgba(0,0,0,.4),0 12px 40px rgba(0,0,0,.5); }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 80px; }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .logo { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), #7d5fff); display: grid; place-items: center; color: #fff; font-size: 21px; flex: none; box-shadow: var(--shadow); }
+  h1 { font-size: 21px; margin: 0; letter-spacing: -.02em; }
+  .tagline { color: var(--ink-2); font-size: 13px; }
+  .theme-btn { border: 1px solid var(--line-2); background: var(--panel); color: var(--ink-2); border-radius: 999px; width: 38px; height: 38px; cursor: pointer; font-size: 16px; flex: none; }
+  .theme-btn:hover { color: var(--ink); border-color: var(--ink-2); }
+
+  .search { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 16px; margin: 16px 0; }
+  .handle-row { display: flex; align-items: center; gap: 0; background: var(--panel-2); border: 1.5px solid transparent; border-radius: 12px; padding: 0 14px; }
+  .handle-row:focus-within { border-color: var(--accent); background: var(--panel); }
+  .handle-row .at { color: var(--muted); font-size: 18px; font-weight: 600; }
+  .handle-row input { flex: 1; border: 0; background: transparent; color: var(--ink); font-size: 17px; padding: 13px 8px; outline: none; }
+  .go { border: 0; background: var(--accent); color: #fff; font-weight: 700; font-size: 15px; border-radius: 999px; padding: 10px 22px; cursor: pointer; }
+  .go:hover { background: var(--accent-2); }
+  .go:disabled { opacity: .55; cursor: default; }
+
+  .range { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 13px; }
+  .range label { font-size: 12.5px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+  .range select, .range input[type="number"] { border: 1px solid var(--line-2); background: var(--panel); color: var(--ink); border-radius: 9px; padding: 7px 9px; font: inherit; font-size: 13px; }
+  .presets { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 11px; }
+  .preset { border: 1px solid var(--line-2); background: transparent; color: var(--ink-2); border-radius: 999px; padding: 5px 12px; font-size: 12.5px; cursor: pointer; }
+  .preset:hover, .preset.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+  .status { font-size: 13.5px; color: var(--ink-2); margin: 6px 2px 14px; display: flex; align-items: center; gap: 9px; min-height: 20px; }
+  .spinner { width: 15px; height: 15px; border: 2px solid var(--line-2); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; flex: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .note { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--ink-2); margin: 14px 0; }
+  .note.warn { border-left-color: var(--warn); }
+  .note b { color: var(--ink); }
+
+  /* histogram */
+  .hist-card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 15px 16px; margin-bottom: 16px; }
+  .hist-card h2 { font-size: 14px; margin: 0 0 2px; }
+  .hist-card .h-sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+  .hist { display: flex; align-items: flex-end; gap: 4px; height: 96px; }
+  .hb { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; cursor: pointer; }
+  .hb .bar { width: 100%; max-width: 34px; background: var(--bar); border-radius: 4px 4px 0 0; min-height: 3px; opacity: .85; transition: opacity .12s, background .12s; }
+  .hb:hover .bar { opacity: 1; }
+  .hb.on .bar { background: var(--accent-2); opacity: 1; }
+  .hb.dim .bar { background: var(--line-2); opacity: .7; }
+  .hb .yl { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .hb .hc { font-size: 10px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+  /* tweet cards */
+  .feed { display: flex; flex-direction: column; gap: 0; }
+  .mgroup { margin-top: 8px; }
+  .mgroup .mh { position: sticky; top: 0; background: var(--bg); font-size: 12px; font-weight: 700; color: var(--ink-2); text-transform: uppercase; letter-spacing: .05em; padding: 10px 2px 6px; z-index: 2; }
+  .tw { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 13px 15px; margin-bottom: 10px; box-shadow: var(--shadow); display: flex; gap: 12px; align-items: flex-start; transition: border-color .12s; }
+  .tw:hover { border-color: var(--line-2); }
+  .tw .av { width: 40px; height: 40px; border-radius: 50%; background: var(--panel-2); display: grid; place-items: center; color: var(--muted); font-weight: 700; flex: none; }
+  .tw .body { flex: 1; min-width: 0; }
+  .tw .top { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .tw .nm { font-weight: 700; }
+  .tw .hd { color: var(--muted); font-size: 13.5px; }
+  .tw .dt { color: var(--muted); font-size: 13px; margin-left: auto; }
+  .tw .txt { font-size: 14.5px; margin: 3px 0 8px; word-wrap: break-word; }
+  .tw .txt.pending { color: var(--muted); font-style: italic; }
+  .tw .acts { display: flex; gap: 16px; align-items: center; }
+  .tw .acts a { font-size: 12.5px; color: var(--ink-2); display: inline-flex; gap: 5px; align-items: center; }
+  .tw .acts a:hover { color: var(--accent); }
+  .tw .cap { font-size: 11.5px; color: var(--muted); }
+
+  .empty { text-align: center; color: var(--muted); padding: 50px 20px; }
+  .empty .big { font-size: 40px; margin-bottom: 10px; opacity: .55; }
+
+  footer { margin-top: 30px; border-top: 1px solid var(--line); padding-top: 14px; color: var(--muted); font-size: 12px; line-height: 1.65; }
+  footer b { color: var(--ink-2); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">⏳</div>
+      <div>
+        <h1>Tweet Time Machine</h1>
+        <div class="tagline">Browse any account's tweets across any era — via the Internet Archive</div>
+      </div>
+    </div>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">◐</button>
+  </header>
+
+  <div class="search">
+    <div class="handle-row">
+      <span class="at">@</span>
+      <input id="handle" type="text" placeholder="handle  (e.g. jack, nasa, barackobama)" autocomplete="off" autocapitalize="none" spellcheck="false" />
+      <button class="go" id="go">Time-travel</button>
+    </div>
+    <div class="range">
+      <label>From <select id="from"></select></label>
+      <label>To <select id="to"></select></label>
+      <label><input type="checkbox" id="tryText" checked /> fetch tweet text</label>
+    </div>
+    <div class="presets" id="presets">
+      <button class="preset" data-f="2006" data-t="2100">All time</button>
+      <button class="preset" data-f="2006" data-t="2009">2006–2009</button>
+      <button class="preset" data-f="2010" data-t="2012">2010–2012</button>
+      <button class="preset" data-f="2013" data-t="2016">2013–2016</button>
+      <button class="preset" data-f="2017" data-t="2020">2017–2020</button>
+      <button class="preset" data-f="2021" data-t="2100">2021 →</button>
+    </div>
+  </div>
+
+  <div class="status" id="status"></div>
+  <div id="notes"></div>
+  <div id="histWrap"></div>
+  <div class="feed" id="feed"></div>
+
+  <footer>
+    <div><b>How this works.</b> This app queries the <a href="https://web.archive.org/" target="_blank" rel="noopener">Internet Archive</a>'s public CDX API for archived captures of <span class="mono">twitter.com/&lt;handle&gt;/status/*</span>, then decodes each tweet's exact post time from its Snowflake ID. It shows only tweets that were <b>archived</b> — coverage is real but incomplete, and heavily-archived (popular) accounts return far more. No login, no API key.</div>
+    <div style="margin-top:8px"><b>Why not "every tweet"?</b> Since 2023 there is no free, public API that returns an account's complete history; the official full-archive search is a paid enterprise product and can't be called from a static page. The Internet Archive is the honest free route to old (2012 and earlier) tweets.</div>
+  </footer>
+</div>
+
+<script>
+const CDX = "https://web.archive.org/cdx/search/cdx";
+const SNOWFLAKE_EPOCH = 1288834974657; // 2010-11-04, Twitter's snowflake epoch
+const NOW_YEAR = new Date().getFullYear();
+const $ = s => document.querySelector(s);
+
+// ---- year selects ----
+const fromSel = $("#from"), toSel = $("#to");
+for (let y = NOW_YEAR; y >= 2006; y--) {
+  fromSel.insertAdjacentHTML("beforeend", `<option value="${y}">${y}</option>`);
+  toSel.insertAdjacentHTML("beforeend", `<option value="${y}">${y}</option>`);
+}
+fromSel.value = "2006"; toSel.value = String(NOW_YEAR);
+
+// ---- theme ----
+$("#themeBtn").onclick = () => {
+  const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+};
+
+// ---- presets ----
+$("#presets").addEventListener("click", e => {
+  const b = e.target.closest(".preset"); if (!b) return;
+  fromSel.value = b.dataset.f;
+  toSel.value = String(Math.min(+b.dataset.t, NOW_YEAR));
+  document.querySelectorAll(".preset").forEach(p => p.classList.toggle("on", p === b));
+  run();
+});
+
+// ---- snowflake → date ----
+function tweetDate(id) {
+  try {
+    const b = BigInt(id);
+    if (b < 300000000000n) return null; // pre-snowflake sequential IDs (≈ before late 2010)
+    const ms = Number((b >> 22n)) + SNOWFLAKE_EPOCH;
+    const d = new Date(ms);
+    const y = d.getUTCFullYear();
+    if (y < 2010 || y > NOW_YEAR + 1) return null;
+    return d;
+  } catch (e) { return null; }
+}
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function fmtDate(d) { return MON[d.getUTCMonth()] + " " + d.getUTCDate() + ", " + d.getUTCFullYear(); }
+function fmtCap(ts) { return ts.slice(0,4)+"-"+ts.slice(4,6)+"-"+ts.slice(6,8); }
+
+// ---- state ----
+let ITEMS = [];       // {id, date, capTs, wb, original}
+let HANDLE = "";
+let yearFilter = null;
+
+function setStatus(html, spin) { $("#status").innerHTML = (spin ? '<span class="spinner"></span>' : "") + html; }
+function note(html, warn) { $("#notes").innerHTML += `<div class="note ${warn?"warn":""}">${html}</div>`; }
+
+async function cdxQuery(pattern) {
+  const url = CDX + "?" + new URLSearchParams({
+    url: pattern, matchType: "prefix", collapse: "urlkey",
+    fl: "timestamp,original,statuscode", output: "json", limit: "2500", filter: "statuscode:200"
+  });
+  const ctl = new AbortController();
+  const to = setTimeout(() => ctl.abort(), 20000);
+  const res = await fetch(url, { signal: ctl.signal, mode: "cors" });
+  clearTimeout(to);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const rows = await res.json();
+  if (!Array.isArray(rows) || rows.length < 2) return [];
+  return rows.slice(1); // drop header
+}
+
+async function run() {
+  const raw = $("#handle").value.trim();
+  const handle = raw.replace(/^@+/, "").replace(/^https?:\/\/(mobile\.|www\.)?(twitter|x)\.com\//i, "").split(/[\/?]/)[0];
+  if (!handle) { setStatus("Enter a handle to begin.", false); return; }
+  HANDLE = handle;
+  $("#go").disabled = true;
+  $("#notes").innerHTML = ""; $("#feed").innerHTML = ""; $("#histWrap").innerHTML = "";
+  ITEMS = []; yearFilter = null;
+  setStatus(`Searching the Internet Archive for <b>@${handle}</b>…`, true);
+
+  const patterns = [
+    `twitter.com/${handle}/status/`,
+    `x.com/${handle}/status/`,
+    `mobile.twitter.com/${handle}/status/`
+  ];
+  const settled = await Promise.allSettled(patterns.map(cdxQuery));
+  const ok = settled.filter(s => s.status === "fulfilled");
+  if (!ok.length) {
+    setStatus("", false);
+    note(`<b>Couldn't reach the Internet Archive from here.</b> This is expected inside the Claude artifact sandbox, which blocks network requests. Open the hosted or local <span class="mono">twitter-travel.html</span> in a normal browser and it will work. (Technical: ${settled[0].reason && settled[0].reason.message || "fetch blocked"}.)`, true);
+    $("#go").disabled = false;
+    return;
+  }
+
+  // merge + dedupe by tweet id
+  const seen = new Map();
+  ok.flatMap(s => s.value).forEach(row => {
+    const [ts, original] = row;
+    const m = String(original).match(/status(?:es)?\/(\d+)/);
+    if (!m) return;
+    const id = m[1];
+    const prev = seen.get(id);
+    if (!prev || ts < prev.capTs) seen.set(id, { id, capTs: ts, original, wb: `https://web.archive.org/web/${ts}/${original}` });
+  });
+
+  const fromY = +fromSel.value, toY = +toSel.value;
+  ITEMS = [...seen.values()].map(it => {
+    it.date = tweetDate(it.id);
+    return it;
+  }).filter(it => {
+    const y = it.date ? it.date.getUTCFullYear() : +it.capTs.slice(0,4);
+    return y >= fromY && y <= toY;
+  }).sort((a,b) => {
+    const da = a.date ? a.date.getTime() : 0, db = b.date ? b.date.getTime() : 0;
+    return db - da;
+  });
+
+  setStatus("", false);
+  if (!ITEMS.length) {
+    $("#feed").innerHTML = `<div class="empty"><div class="big">🕳️</div>No archived tweets found for <b>@${handle}</b> in ${fromY}–${toY}.<br>Try widening the years, or a more heavily-archived account.</div>`;
+    $("#go").disabled = false;
+    return;
+  }
+  const decoded = ITEMS.filter(i => i.date).length;
+  setStatus(`Found <b>${ITEMS.length}</b> archived tweet${ITEMS.length>1?"s":""} for <b>@${handle}</b> · ${decoded} precisely dated.`, false);
+  if (seen.size >= 2400) note(`Showing the first <b>${ITEMS.length}</b> captures — this account is heavily archived and results were capped. Narrow the year range to page through more.`, false);
+
+  renderHist();
+  renderFeed();
+  if ($("#tryText").checked) hydrateText();
+  $("#go").disabled = false;
+}
+
+function renderHist() {
+  const counts = {};
+  ITEMS.forEach(it => { const y = it.date ? it.date.getUTCFullYear() : +it.capTs.slice(0,4); counts[y] = (counts[y]||0)+1; });
+  const years = Object.keys(counts).map(Number).sort((a,b)=>a-b);
+  if (!years.length) return;
+  const lo = years[0], hi = years[years.length-1];
+  const span = []; for (let y=lo; y<=hi; y++) span.push(y);
+  const mx = Math.max(...Object.values(counts));
+  $("#histWrap").innerHTML = `<div class="hist-card"><h2>Tweets per year</h2>
+    <div class="h-sub">Click a year to filter · dated from each tweet's Snowflake ID</div>
+    <div class="hist">${span.map(y => `
+      <div class="hb ${yearFilter===y?"on":""} ${yearFilter&&yearFilter!==y?"dim":""}" data-y="${y}" title="${y}: ${counts[y]||0}">
+        <div class="hc">${counts[y]||""}</div>
+        <div class="bar" style="height:${((counts[y]||0)/mx)*100}%"></div>
+        <div class="yl">${String(y).slice(2)}</div>
+      </div>`).join("")}</div></div>`;
+  $("#histWrap").querySelectorAll(".hb").forEach(b => b.onclick = () => {
+    const y = +b.dataset.y; yearFilter = (yearFilter===y) ? null : y;
+    renderHist(); renderFeed(); if ($("#tryText").checked) hydrateText();
+  });
+}
+
+function renderFeed() {
+  const list = yearFilter ? ITEMS.filter(i => (i.date?i.date.getUTCFullYear():+i.capTs.slice(0,4))===yearFilter) : ITEMS;
+  const groups = {};
+  list.forEach(it => {
+    const key = it.date ? it.date.getUTCFullYear()+"-"+String(it.date.getUTCMonth()+1).padStart(2,"0") : "undated";
+    (groups[key] = groups[key] || []).push(it);
+  });
+  const keys = Object.keys(groups).sort().reverse();
+  $("#feed").innerHTML = keys.map(k => {
+    const label = k==="undated" ? "Undated captures" : MON[+k.slice(5)-1]+" "+k.slice(0,4);
+    return `<div class="mgroup"><div class="mh">${label} · ${groups[k].length}</div>` +
+      groups[k].map(it => card(it)).join("") + `</div>`;
+  }).join("");
+}
+
+function card(it) {
+  const av = HANDLE.slice(0,1).toUpperCase();
+  const when = it.date ? fmtDate(it.date) : "date unknown";
+  return `<div class="tw" id="tw-${it.id}">
+    <div class="av">${av}</div>
+    <div class="body">
+      <div class="top"><span class="nm">@${HANDLE}</span><span class="hd">·</span><span class="dt">${when}</span></div>
+      <div class="txt pending" data-txt="${it.id}">Loading archived text…</div>
+      <div class="acts">
+        <a href="${it.wb}" target="_blank" rel="noopener">↗ View archived tweet</a>
+        <a href="https://twitter.com/${HANDLE}/status/${it.id}" target="_blank" rel="noopener">↗ Live (if it still exists)</a>
+        <span class="cap">archived ${fmtCap(it.capTs)}</span>
+      </div>
+    </div></div>`;
+}
+
+// Optionally pull the tweet text from the archived snapshot (best-effort; CORS on
+// individual snapshots varies, so failures are silent and leave the link).
+async function hydrateText() {
+  const pend = [...document.querySelectorAll(".txt.pending")].slice(0, 24); // cap concurrent work
+  if (!$("#tryText").checked) { document.querySelectorAll(".txt.pending").forEach(t => { t.textContent = ""; t.classList.remove("pending"); }); return; }
+  await Promise.allSettled(pend.map(async el => {
+    const id = el.dataset.txt;
+    const it = ITEMS.find(x => x.id === id);
+    if (!it) return;
+    try {
+      const ctl = new AbortController(); const to = setTimeout(()=>ctl.abort(), 15000);
+      const res = await fetch(`https://web.archive.org/web/${it.capTs}id_/${it.original}`, { signal: ctl.signal, mode: "cors" });
+      clearTimeout(to);
+      const html = await res.text();
+      const txt = extractTweetText(html);
+      if (txt) { el.textContent = txt; el.classList.remove("pending"); }
+      else { el.textContent = ""; el.classList.remove("pending"); }
+    } catch (e) { el.textContent = ""; el.classList.remove("pending"); }
+  }));
+  document.querySelectorAll(".txt.pending").forEach(t => { t.textContent = ""; t.classList.remove("pending"); });
+}
+
+function extractTweetText(html) {
+  // Try Open Graph / meta description (present in most archived tweet pages)
+  const og = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
+          || html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
+  if (og) { let t = decodeEntities(og[1]).trim(); t = t.replace(/^["'“]|["'”]$/g, ""); if (t && t.length > 1) return t; }
+  const jt = html.match(/<p[^>]*class=["'][^"']*js-tweet-text[^"']*["'][^>]*>([\s\S]*?)<\/p>/i)
+          || html.match(/<div[^>]+data-testid=["']tweetText["'][^>]*>([\s\S]*?)<\/div>/i);
+  if (jt) { const t = decodeEntities(jt[1].replace(/<[^>]+>/g, "")).trim(); if (t) return t; }
+  return null;
+}
+function decodeEntities(s) {
+  const el = document.createElement("textarea"); el.innerHTML = s; return el.value;
+}
+
+$("#go").onclick = run;
+$("#handle").addEventListener("keydown", e => { if (e.key === "Enter") run(); });
+$("#tryText").addEventListener("change", () => { if (ITEMS.length) { if ($("#tryText").checked) hydrateText(); else document.querySelectorAll(".txt").forEach(t=>{t.textContent="";t.classList.remove("pending");}); } });
+
+setStatus("Enter a handle and pick an era — try <b>@jack</b> (first tweet, 2006) or <b>@nasa</b>.", false);
+</script>
