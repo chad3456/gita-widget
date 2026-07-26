@@ -1,0 +1,22 @@
+{
+  "name": "tweet-time-machine",
+  "version": "1.0.0",
+  "description": "Browse any Twitter/X account's tweets across any era via the Internet Archive, with optional official X API support.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0"
+  },
+  "license": "MIT"
+}

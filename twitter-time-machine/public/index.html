@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tweet Time Machine</title>
+  <meta name="description" content="Browse any Twitter/X account's tweets across any era — via the Internet Archive, with optional official X API." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏳</text></svg>" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">⏳</div>
+        <div>
+          <h1>Tweet Time Machine</h1>
+          <div class="tagline">Browse any account's tweets across any era</div>
+        </div>
+      </div>
+      <button class="theme-btn" id="themeBtn" aria-label="Toggle theme" type="button">◐</button>
+    </header>
+
+    <div class="search">
+      <div class="handle-row">
+        <span class="at">@</span>
+        <input id="handle" type="text" placeholder="handle  (e.g. jack, nasa, barackobama)" autocomplete="off" autocapitalize="none" spellcheck="false" />
+        <button class="go" id="go" type="button">Time-travel</button>
+      </div>
+      <div class="row2">
+        <div class="sources" id="sources" role="group" aria-label="Data source">
+          <button data-src="archive" aria-pressed="true">Internet Archive · free</button>
+          <button data-src="xapi" aria-pressed="false" disabled title="Set X_BEARER_TOKEN on the server to enable">Official X API</button>
+        </div>
+        <div class="range">
+          <label>From <select id="from"></select></label>
+          <label>To <select id="to"></select></label>
+          <label id="textToggleWrap"><input type="checkbox" id="tryText" checked /> fetch text</label>
+        </div>
+      </div>
+      <div class="presets" id="presets">
+        <button class="preset" data-f="2006" data-t="2100" type="button">All time</button>
+        <button class="preset" data-f="2006" data-t="2009" type="button">2006–2009</button>
+        <button class="preset" data-f="2010" data-t="2012" type="button">2010–2012</button>
+        <button class="preset" data-f="2013" data-t="2016" type="button">2013–2016</button>
+        <button class="preset" data-f="2017" data-t="2020" type="button">2017–2020</button>
+        <button class="preset" data-f="2021" data-t="2100" type="button">2021 →</button>
+      </div>
+    </div>
+
+    <div class="status" id="status"></div>
+    <div id="notes"></div>
+    <div id="profile"></div>
+    <div id="histWrap"></div>
+    <div class="feed" id="feed"></div>
+
+    <footer>
+      <div><b>How it works.</b> The <b>Internet Archive</b> source (free, no key) lists real archived captures of an account's tweets and decodes each tweet's exact date from its Snowflake ID — the honest route to old (2012 and earlier) tweets, though coverage is limited to what was archived. The <b>Official X API</b> source (shown only when the server is configured with a token) returns complete results where the token's access tier allows.</div>
+    </footer>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>
