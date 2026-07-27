@@ -9,42 +9,63 @@ It's a Node/Express server that serves a single-page frontend and proxies two da
 | **Internet Archive** (default) | Free, no key | Real archived captures back to 2006 | Incomplete — only what was archived. Each tweet's exact date is decoded from its Snowflake ID. |
 | **Official X API v2** (optional) | Paid tiers | Complete where your token's tier allows | Enable by setting `X_BEARER_TOKEN`. Full history to 2012 needs an elevated (Academic/Pro/Enterprise) tier; Basic/Free falls back to recent tweets. |
 
-Running it as a server (rather than a static page) is what makes it "production": the browser never sees API tokens, cross-origin calls happen server-side, and responses are cached and rate-limited.
+It runs on **Vercel** as serverless functions (`api/*`) plus a static frontend (`public/`). Doing the fetching server-side is what makes it "production": the browser never sees API tokens, cross-origin calls happen server-side, and responses are edge-cached.
 
 ## Why not a pure static app / "every tweet"?
 
 Since 2023 there is **no free, public API** that returns an account's complete history, and a static browser page can't call `api.twitter.com` (CORS) or hold a secret token. The Internet Archive is the honest free route to old tweets; the official API (server-side, paid) is the route to completeness. This app supports both.
 
+## Deploy to Vercel
+
+**Dashboard (easiest):** Vercel → **Add New → Project** → import this repo → set **Root Directory** to `twitter-time-machine` → Deploy. No build command needed (`vercel.json` handles routing).
+
+**CLI:**
+
+```bash
+npm i -g vercel
+cd twitter-time-machine
+vercel            # preview deploy
+vercel --prod     # production
+```
+
+To enable the **Official X API** source, add an environment variable in the
+Vercel project (Settings → Environment Variables), then redeploy:
+
+```
+X_BEARER_TOKEN = <your X API v2 bearer token>
+```
+
+`api/config` reports whether it's set, and the frontend enables/disables the
+source toggle accordingly.
+
+### How it maps onto Vercel
+
+- `api/config.js`, `api/archive.js`, `api/archive/text.js`, `api/xapi.js` →
+  serverless functions at `/api/*` (each `export default`s a `(req, res)` handler).
+- `public/` → static frontend, with an SPA-style rewrite in `vercel.json`.
+- Security headers (CSP, nosniff, referrer-policy) are set in `vercel.json`.
+- Caching is via `Cache-Control` (edge `s-maxage`); the in-memory TTL cache in
+  `lib/` is a best-effort bonus on warm instances.
+
 ## Run locally
+
+`server.js` is a thin Express dev server that mounts the **same** `api/*`
+handlers, so local behavior matches Vercel with no duplicated logic:
 
 ```bash
 cd twitter-time-machine
 npm install
-npm start
-# open http://localhost:3000
+npm start                       # http://localhost:3000
+X_BEARER_TOKEN=xxxx npm start   # with the official API enabled
 ```
 
-Optionally enable the official X API:
-
-```bash
-cp .env.example .env
-# put your bearer token in .env, then:
-X_BEARER_TOKEN=xxxx npm start
-```
+(Or use `vercel dev` if you have the Vercel CLI — it runs the functions directly.)
 
 ## Test
 
 ```bash
 npm test        # unit tests: snowflake decoding, handle parsing, text extraction
 ```
-
-## Deploy
-
-Any Node host works. Included configs:
-
-- **Render** — New → Blueprint → pick this repo (`render.yaml` builds from this folder). Set `X_BEARER_TOKEN` in the dashboard to enable the official API.
-- **Docker** — `docker build -t ttm . && docker run -p 3000:3000 -e X_BEARER_TOKEN=… ttm`
-- **Railway / Fly / Heroku-likes** — `Procfile` (`web: node server.js`); set `X_BEARER_TOKEN` as a secret.
 
 ## API
 
@@ -65,13 +86,18 @@ Twitter IDs after late 2010 are **Snowflake** IDs that embed the creation timest
 ## Project layout
 
 ```
-server.js          Express app: routes, security, caching, rate limiting
-lib/util.js        Snowflake decode, text extraction, TTL cache, handle parsing
-lib/archive.js     Internet Archive (CDX) client
-lib/xapi.js        Official X API v2 client
-public/            Frontend SPA (index.html, app.js, styles.css)
-test/              Unit tests (node:test)
-Dockerfile · render.yaml · Procfile · .env.example
+api/config.js        GET /api/config      (serverless fn)
+api/archive.js       GET /api/archive     (serverless fn)
+api/archive/text.js  GET /api/archive/text (serverless fn)
+api/xapi.js          GET /api/xapi        (serverless fn)
+lib/util.js          Snowflake decode, text extraction, TTL cache, handle parsing
+lib/archive.js       Internet Archive (CDX) client
+lib/xapi.js          Official X API v2 client
+lib/http.js          Framework-agnostic req/res helpers
+public/              Frontend SPA (index.html, app.js, styles.css)
+server.js            Local dev server (mounts the same api/ handlers)
+test/                Unit tests (node:test)
+vercel.json · .env.example
 ```
 
 ## Limitations (read before expecting magic)
